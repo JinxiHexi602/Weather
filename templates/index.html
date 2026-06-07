@@ -12,17 +12,15 @@
 
 	<div class="app-shell">
 		<header class="topbar">
-			<div class="top-info location-info" id="location-info" data-location-id="{{ weather.location.id }}" data-city-key="{{ weather.selected_city_key }}" data-latitude="{{ weather.location.lat }}" data-longitude="{{ weather.location.lon }}">
+			<div class="top-info location-info" id="location-info" data-location-id="{{ weather.location.id }}" data-location-name="{{ weather.place }}" data-latitude="{{ weather.location.lat }}" data-longitude="{{ weather.location.lon }}">
 				<span class="info-label icon-label" aria-label="当前位置">
 					<span class="location-icon" aria-hidden="true"></span>
 				</span>
-				<form class="city-picker" id="city-picker" action="/" method="get">
-					<label class="sr-only" for="city-select">选择城市</label>
-					<select class="city-select" id="city-select" name="city" aria-label="选择城市">
-						{% for city in weather.city_options %}
-							<option value="{{ city['key'] }}" {% if city['key'] == weather.selected_city_key %}selected{% endif %}>{{ city['name'] }}</option>
-						{% endfor %}
-					</select>
+				<form class="city-picker" id="city-picker" action="/" method="get" autocomplete="off">
+					<label class="sr-only" for="city-search">搜索城市</label>
+					<input class="city-search" id="city-search" type="search" name="q" value="{{ weather.place }}" placeholder="搜索城市" aria-label="搜索城市" aria-autocomplete="list" aria-expanded="false" aria-controls="city-results">
+					<input id="city-location" type="hidden" name="location" value="{{ weather.location.id }}">
+					<div class="city-results" id="city-results" role="listbox" hidden></div>
 					<button class="city-submit" type="submit">切换</button>
 				</form>
 			</div>

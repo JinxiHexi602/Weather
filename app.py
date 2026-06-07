@@ -169,6 +169,7 @@ QWEATHER_API_NOTES = {
 
 QWEATHER_CACHE: dict[str, dict[str, Any]] = {}
 QWEATHER_JWT_CACHE: dict[str, Any] = {"token": "", "expires_at": 0}
+QWEATHER_CITY_SEARCH_CACHE: dict[str, dict[str, Any]] = {}
 
 
 def read_sample() -> dict[str, Any]:
@@ -251,25 +252,78 @@ def qweather_get(config: dict[str, str], path: str, params: dict[str, Any] | Non
 	return data
 
 
+def normalize_qweather_location(entry: dict[str, Any], fallback: dict[str, str] | None = None) -> dict[str, str]:
+	fallback = fallback or {}
+	location_id = str(entry.get("id") or fallback.get("key") or DEFAULT_CITY_KEY)
+	name = str(entry.get("name") or fallback.get("name") or location_id)
+	return {
+		"key": location_id,
+		"name": name,
+		"adm1": str(entry.get("adm1") or fallback.get("adm1") or ""),
+		"adm2": str(entry.get("adm2") or fallback.get("adm2") or ""),
+		"country": str(entry.get("country") or fallback.get("country") or ""),
+		"lat": str(entry.get("lat") or fallback.get("lat") or "0"),
+		"lon": str(entry.get("lon") or fallback.get("lon") or "0"),
+		"source": "qweather",
+	}
+
+
+def qweather_location_lookup(location_value: str) -> dict[str, Any]:
+	config = qweather_config()
+	if not qweather_is_configured(config):
+		raise RuntimeError("QWeather API credentials are not configured")
+	return qweather_get(
+		config,
+		"/geo/v2/city/lookup",
+		{"location": location_value, "lang": QWEATHER_LANGUAGE},
+	)
+
+
+def search_qweather_cities(query: str) -> list[dict[str, str]]:
+	query = query.strip()
+	if len(query) < 2:
+		return []
+
+	now = time.time()
+	cache_key = query.casefold()
+	cached = QWEATHER_CITY_SEARCH_CACHE.get(cache_key)
+	if cached and now - cached["loaded_at"] < QWEATHER_CACHE_SECONDS:
+		return cached["cities"]
+
+	config = qweather_config()
+	if not qweather_is_configured(config):
+		return []
+
+	data = qweather_get(
+		config,
+		"/geo/v2/city/lookup",
+		{"location": query, "lang": QWEATHER_LANGUAGE, "number": 10},
+	)
+	cities = [normalize_qweather_location(item) for item in data.get("location", [])]
+	QWEATHER_CITY_SEARCH_CACHE[cache_key] = {"loaded_at": now, "cities": cities}
+	return cities
+
+
 def fetch_qweather_payload(location: dict[str, str]) -> dict[str, Any]:
 	config = qweather_config()
 	if not qweather_is_configured(config):
 		raise RuntimeError("QWeather API credentials are not configured")
 
-	coordinate_location = f"{location['lon']},{location['lat']}"
-	geo_lookup = qweather_get(config, "/geo/v2/city/lookup", {"location": coordinate_location, "lang": QWEATHER_LANGUAGE})
-	location_id = (
-		geo_lookup.get("location", [{}])[0].get("id")
-		or coordinate_location
-	)
+	lookup_value = location["key"] if location.get("source") == "qweather" else f"{location['lon']},{location['lat']}"
+	geo_lookup = qweather_location_lookup(lookup_value)
+	if not geo_lookup.get("location"):
+		raise RuntimeError(f"QWeather GeoAPI could not resolve {lookup_value}")
+	resolved_location = normalize_qweather_location(geo_lookup["location"][0], location)
+	location_id = resolved_location["key"]
 	indices_types = ",".join(QWEATHER_HOME_LIFE_TYPES)
 	weather_params = {"location": location_id, "lang": QWEATHER_LANGUAGE}
-	air_latitude = f"{float(location['lat']):.2f}"
-	air_longitude = f"{float(location['lon']):.2f}"
+	air_latitude = f"{float(resolved_location['lat']):.2f}"
+	air_longitude = f"{float(resolved_location['lon']):.2f}"
 	return {
 		"provider": "QWeather",
 		"api_enabled": True,
 		"api_notes": QWEATHER_API_NOTES,
+		"_location": resolved_location,
 		"fetched_at": datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds"),
 		"browser_location": None,
 		"geo_lookup": geo_lookup,
@@ -825,13 +879,24 @@ def build_daily(daily: dict[str, Any]) -> list[dict[str, Any]]:
 	return items
 
 
-def selected_city(city_key: str | None) -> dict[str, str]:
+def selected_city(location_id: str | None, city_key: str | None = None) -> dict[str, str]:
+	if location_id:
+		return {
+			"key": location_id,
+			"name": location_id,
+			"adm1": "",
+			"adm2": "",
+			"lat": "0",
+			"lon": "0",
+			"source": "qweather",
+		}
 	return CITY_BY_KEY.get(city_key or "", CITY_BY_KEY[DEFAULT_CITY_KEY])
 
 
-def load_weather(city_key: str | None = None) -> dict[str, Any]:
-	location = selected_city(city_key)
+def load_weather(location_id: str | None = None, city_key: str | None = None) -> dict[str, Any]:
+	location = selected_city(location_id, city_key)
 	payload, cache_hit = load_qweather_payload(location)
+	location = payload.get("_location", location)
 	now = payload["weather_now"]["now"]
 	hourly = payload["weather_hourly"]
 	daily = payload["weather_daily"]
@@ -853,8 +918,7 @@ def load_weather(city_key: str | None = None) -> dict[str, Any]:
 			"lat": latitude,
 			"lon": longitude,
 		},
-		"selected_city_key": location["key"],
-		"city_options": CITY_OPTIONS,
+		"selected_location_id": location["key"],
 		"updated_at": "刚刚",
 		"updated_at_iso": updated_at,
 		"api_enabled": bool(payload.get("api_enabled")),
@@ -922,16 +986,23 @@ def load_weather(city_key: str | None = None) -> dict[str, Any]:
 
 @app.route("/")
 def index():
-	return render_template("index.html", weather=load_weather(request.args.get("city")))
+	return render_template("index.html", weather=load_weather(request.args.get("location"), request.args.get("city")))
 
 
 @app.get("/api/weather")
 def api_weather():
-	weather = load_weather(request.args.get("city"))
+	weather = load_weather(request.args.get("location"), request.args.get("city"))
 	return jsonify({
 		"cache_hit": weather["cache_hit"],
 		"updated_at": weather["updated_at_iso"],
 		"api_enabled": weather["api_enabled"],
+	})
+
+
+@app.get("/api/cities")
+def api_cities():
+	return jsonify({
+		"cities": search_qweather_cities(request.args.get("q", "")),
 	})
 
 

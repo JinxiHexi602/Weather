@@ -6,12 +6,17 @@ const updateInfo = document.querySelector("#update-info");
 const updateTime = document.querySelector("#update-time");
 const refreshButton = document.querySelector("#refresh-weather");
 const cityPicker = document.querySelector("#city-picker");
-const citySelect = document.querySelector("#city-select");
+const citySearch = document.querySelector("#city-search");
+const cityLocation = document.querySelector("#city-location");
+const cityResults = document.querySelector("#city-results");
 let activeTrigger = null;
 let closeTimer = null;
 let lastUpdatedAt = parseUpdatedAt(updateTime?.dataset.updatedAt);
 let refreshTimer = null;
 let updateTimer = null;
+let citySearchTimer = null;
+let activeCityResults = [];
+let locationFallbackApplied = false;
 
 function parseUpdatedAt(value) {
 	if (!value) {
@@ -134,8 +139,9 @@ async function refreshWeather() {
 
 	try {
 		const params = new URLSearchParams(window.location.search);
-		if (citySelect?.value) {
-			params.set("city", citySelect.value);
+		if (cityLocation?.value) {
+			params.set("location", cityLocation.value);
+			params.delete("city");
 		}
 		const response = await fetch(`/api/weather?${params.toString()}`, {
 			headers: {"Accept": "application/json"},
@@ -163,7 +169,7 @@ async function refreshWeather() {
 
 function readStoredCity() {
 	try {
-		return window.localStorage.getItem("weather:selected-city");
+		return window.localStorage.getItem("weather:selected-location");
 	} catch {
 		return null;
 	}
@@ -171,40 +177,195 @@ function readStoredCity() {
 
 function saveSelectedCity(cityKey) {
 	try {
-		window.localStorage.setItem("weather:selected-city", cityKey);
+		window.localStorage.setItem("weather:selected-location", cityKey);
 	} catch {
 		// localStorage can be unavailable in private or restricted browsing modes.
 	}
 }
 
-function initCityPicker() {
-	if (!cityPicker || !citySelect) {
+function currentRequestedLocation() {
+	const params = new URLSearchParams(window.location.search);
+	return params.get("location") || params.get("city") || "";
+}
+
+function isLegacyCityKey(value) {
+	return /^[a-z-]+$/.test(value);
+}
+
+function buildLocationUrl(locationId, parameterName = "location") {
+	const params = new URLSearchParams(window.location.search);
+	if (parameterName === "city") {
+		params.set("city", locationId);
+		params.delete("location");
+	} else {
+		params.set("location", locationId);
+		params.delete("city");
+	}
+	params.delete("q");
+	return `${window.location.pathname}?${params.toString()}`;
+}
+
+function navigateToLocation(locationId, replace = false, parameterName = "location") {
+	if (!locationId) {
 		return false;
 	}
 
-	const params = new URLSearchParams(window.location.search);
-	const cityFromUrl = params.get("city");
-	const storedCity = readStoredCity();
-	const validStoredCity = storedCity && [...citySelect.options].some((option) => option.value === storedCity);
-
-	if (!cityFromUrl && validStoredCity && storedCity !== citySelect.value) {
-		params.set("city", storedCity);
-		window.location.replace(`${window.location.pathname}?${params.toString()}`);
-		return true;
+	const nextUrl = buildLocationUrl(locationId, parameterName);
+	const currentUrl = `${window.location.pathname}${window.location.search}`;
+	if (nextUrl === currentUrl) {
+		return false;
 	}
 
-	saveSelectedCity(citySelect.value);
+	const method = replace ? "replace" : "assign";
+	window.location[method](nextUrl);
+	return true;
+}
 
-	citySelect.addEventListener("change", () => {
-		saveSelectedCity(citySelect.value);
-		if (typeof cityPicker.requestSubmit === "function") {
-			cityPicker.requestSubmit();
-			return;
-		}
-		cityPicker.submit();
+function fallbackToStoredLocation() {
+	if (locationFallbackApplied || currentRequestedLocation()) {
+		return false;
+	}
+
+	locationFallbackApplied = true;
+	const storedCity = readStoredCity();
+	if (!storedCity) {
+		return false;
+	}
+
+	return navigateToLocation(storedCity, true, isLegacyCityKey(storedCity) ? "city" : "location");
+}
+
+function cityLabel(city) {
+	return [city.name, city.adm2, city.adm1, city.country].filter(Boolean).join(" · ");
+}
+
+function hideCityResults() {
+	if (!cityResults || !citySearch) {
+		return;
+	}
+
+	cityResults.hidden = true;
+	cityResults.innerHTML = "";
+	citySearch.setAttribute("aria-expanded", "false");
+	activeCityResults = [];
+}
+
+function renderCityResults(cities) {
+	if (!cityResults || !citySearch) {
+		return;
+	}
+
+	activeCityResults = cities;
+	cityResults.innerHTML = "";
+	if (!cities.length) {
+		hideCityResults();
+		return;
+	}
+
+	cities.forEach((city) => {
+		const button = document.createElement("button");
+		button.className = "city-result";
+		button.type = "button";
+		button.role = "option";
+		button.dataset.locationId = city.key;
+		button.innerHTML = `<strong>${city.name}</strong><span>${cityLabel(city)}</span>`;
+		button.addEventListener("click", () => selectCity(city));
+		cityResults.append(button);
+	});
+	cityResults.hidden = false;
+	citySearch.setAttribute("aria-expanded", "true");
+}
+
+async function fetchCities(query) {
+	const response = await fetch(`/api/cities?q=${encodeURIComponent(query)}`, {
+		headers: {"Accept": "application/json"},
+	});
+	if (!response.ok) {
+		throw new Error(`City search failed: ${response.status}`);
+	}
+	const payload = await response.json();
+	return payload.cities || [];
+}
+
+async function searchCities(query) {
+	renderCityResults(await fetchCities(query));
+}
+
+function scheduleCitySearch() {
+	window.clearTimeout(citySearchTimer);
+	const query = citySearch?.value.trim() || "";
+	if (query.length < 2) {
+		hideCityResults();
+		return;
+	}
+
+	citySearchTimer = window.setTimeout(() => {
+		searchCities(query).catch(hideCityResults);
+	}, 240);
+}
+
+function selectCity(city) {
+	if (!cityLocation || !citySearch || !cityPicker) {
+		return;
+	}
+
+	cityLocation.value = city.key;
+	citySearch.value = city.name;
+	saveSelectedCity(city.key);
+	hideCityResults();
+	if (typeof cityPicker.requestSubmit === "function") {
+		cityPicker.requestSubmit();
+		return;
+	}
+	cityPicker.submit();
+}
+
+function initCityPicker() {
+	if (!cityPicker || !citySearch || !cityLocation) {
+		return false;
+	}
+
+	if (currentRequestedLocation() && cityLocation.value) {
+		saveSelectedCity(cityLocation.value);
+	}
+
+	citySearch.addEventListener("input", () => {
+		cityLocation.value = "";
+		scheduleCitySearch();
 	});
 
-	cityPicker.addEventListener("submit", () => saveSelectedCity(citySelect.value));
+	citySearch.addEventListener("keydown", (event) => {
+		if (event.key === "Escape") {
+			hideCityResults();
+			return;
+		}
+		if (event.key === "Enter" && activeCityResults.length) {
+			event.preventDefault();
+			selectCity(activeCityResults[0]);
+		}
+	});
+
+	document.addEventListener("click", (event) => {
+		if (!cityPicker.contains(event.target)) {
+			hideCityResults();
+		}
+	});
+
+	cityPicker.addEventListener("submit", (event) => {
+		if (cityLocation.value) {
+			saveSelectedCity(cityLocation.value);
+			event.preventDefault();
+			navigateToLocation(cityLocation.value);
+			return;
+		}
+		if (activeCityResults.length) {
+			event.preventDefault();
+			selectCity(activeCityResults[0]);
+			return;
+		}
+		event.preventDefault();
+		scheduleCitySearch();
+	});
 	return false;
 }
 
@@ -229,36 +390,68 @@ function saveLocation(position) {
 		locationInfo.dataset.browserLongitude = String(coordinates.longitude);
 		locationInfo.title = `已定位：${coordinates.latitude}, ${coordinates.longitude}`;
 	}
+
+	return coordinates;
 }
 
 function handleLocationError(error) {
-	if (!locationInfo) {
-		return;
+	if (locationInfo) {
+		locationInfo.classList.remove("is-locating", "is-located");
+		locationInfo.classList.add("is-location-denied");
+		locationInfo.title = error?.message ? `定位未启用：${error.message}` : "定位未启用";
+	}
+	fallbackToStoredLocation();
+}
+
+async function resolveBrowserLocation(position) {
+	const coordinates = saveLocation(position);
+	const query = `${coordinates.longitude},${coordinates.latitude}`;
+
+	try {
+		const cities = await fetchCities(query);
+		const city = cities[0];
+		if (city?.key) {
+			if (cityLocation) {
+				cityLocation.value = city.key;
+			}
+			if (citySearch && city.name) {
+				citySearch.value = city.name;
+			}
+			saveSelectedCity(city.key);
+			navigateToLocation(city.key, true);
+			return;
+		}
+	} catch {
+		if (locationInfo) {
+			locationInfo.title = "已定位，城市解析失败";
+		}
 	}
 
-	locationInfo.classList.remove("is-locating", "is-located");
-	locationInfo.classList.add("is-location-denied");
-	locationInfo.title = error?.message ? `定位未启用：${error.message}` : "定位未启用";
+	fallbackToStoredLocation();
 }
 
 function requestBrowserLocation() {
-	if (!locationInfo || !("geolocation" in navigator)) {
-		return;
+	if (currentRequestedLocation()) {
+		return false;
 	}
 
-	locationInfo.classList.add("is-locating");
-	navigator.geolocation.getCurrentPosition(saveLocation, handleLocationError, {
+	if (!("geolocation" in navigator)) {
+		fallbackToStoredLocation();
+		return false;
+	}
+
+	locationInfo?.classList.add("is-locating");
+	navigator.geolocation.getCurrentPosition(resolveBrowserLocation, handleLocationError, {
 		enableHighAccuracy: true,
 		maximumAge: 5 * 60 * 1000,
 		timeout: 8000,
 	});
+	return true;
 }
 
-const isSwitchingCity = initCityPicker();
+initCityPicker();
 renderUpdateTime();
-if (!isSwitchingCity) {
-	requestBrowserLocation();
-}
+requestBrowserLocation();
 
 function settleOpenAnimation() {
 	if (!backdrop) {
