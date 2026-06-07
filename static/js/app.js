@@ -185,32 +185,23 @@ function saveSelectedCity(cityKey) {
 
 function currentRequestedLocation() {
 	const params = new URLSearchParams(window.location.search);
-	return params.get("location") || params.get("city") || "";
+	return params.get("location") || "";
 }
 
-function isLegacyCityKey(value) {
-	return /^[a-z-]+$/.test(value);
-}
-
-function buildLocationUrl(locationId, parameterName = "location") {
+function buildLocationUrl(locationId) {
 	const params = new URLSearchParams(window.location.search);
-	if (parameterName === "city") {
-		params.set("city", locationId);
-		params.delete("location");
-	} else {
-		params.set("location", locationId);
-		params.delete("city");
-	}
+	params.set("location", locationId);
+	params.delete("city");
 	params.delete("q");
 	return `${window.location.pathname}?${params.toString()}`;
 }
 
-function navigateToLocation(locationId, replace = false, parameterName = "location") {
+function navigateToLocation(locationId, replace = false) {
 	if (!locationId) {
 		return false;
 	}
 
-	const nextUrl = buildLocationUrl(locationId, parameterName);
+	const nextUrl = buildLocationUrl(locationId);
 	const currentUrl = `${window.location.pathname}${window.location.search}`;
 	if (nextUrl === currentUrl) {
 		return false;
@@ -232,7 +223,7 @@ function fallbackToStoredLocation() {
 		return false;
 	}
 
-	return navigateToLocation(storedCity, true, isLegacyCityKey(storedCity) ? "city" : "location");
+	return navigateToLocation(storedCity, true);
 }
 
 function cityLabel(city) {

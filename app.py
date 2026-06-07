@@ -17,100 +17,14 @@ app = Flask(__name__)
 
 DATA_FILE = Path(__file__).resolve().parent / "data" / "qweather_sample.json"
 ENV_FILE = Path(__file__).resolve().parent / ".env"
-DEFAULT_CITY_KEY = "nankang"
+DEFAULT_LOCATION_ID = "101240704"
 QWEATHER_CACHE_SECONDS = 60
 QWEATHER_TIMEOUT_SECONDS = 10
 QWEATHER_JWT_TTL_SECONDS = 900
 QWEATHER_LANGUAGE = "zh"
 QWEATHER_MAX_FETCH_ATTEMPTS = 3
 
-CITY_OPTIONS: list[dict[str, str]] = [
-	{"key": "nankang", "name": "南康区", "adm1": "江西省", "adm2": "赣州市", "lat": "25.6617", "lon": "114.7654"},
-	{"key": "ganzhou", "name": "赣州市", "adm1": "江西省", "adm2": "赣州市", "lat": "25.8311", "lon": "114.9348"},
-	{"key": "nanchang", "name": "南昌市", "adm1": "江西省", "adm2": "南昌市", "lat": "28.6820", "lon": "115.8579"},
-	{"key": "guangzhou", "name": "广州市", "adm1": "广东省", "adm2": "广州市", "lat": "23.1291", "lon": "113.2644"},
-	{"key": "shenzhen", "name": "深圳市", "adm1": "广东省", "adm2": "深圳市", "lat": "22.5431", "lon": "114.0579"},
-	{"key": "shanghai", "name": "上海市", "adm1": "上海市", "adm2": "上海市", "lat": "31.2304", "lon": "121.4737"},
-	{"key": "beijing", "name": "北京市", "adm1": "北京市", "adm2": "北京市", "lat": "39.9042", "lon": "116.4074"},
-	{"key": "hangzhou", "name": "杭州市", "adm1": "浙江省", "adm2": "杭州市", "lat": "30.2741", "lon": "120.1551"},
-	{"key": "chengdu", "name": "成都市", "adm1": "四川省", "adm2": "成都市", "lat": "30.5728", "lon": "104.0668"},
-]
-CITY_BY_KEY = {city["key"]: city for city in CITY_OPTIONS}
-
-SKY_TEXT: dict[str, str] = {
-	"CLEAR_DAY": "晴",
-	"CLEAR_NIGHT": "晴",
-	"PARTLY_CLOUDY_DAY": "多云",
-	"PARTLY_CLOUDY_NIGHT": "多云",
-	"CLOUDY": "阴",
-	"LIGHT_HAZE": "轻度雾霾",
-	"MODERATE_HAZE": "中度雾霾",
-	"HEAVY_HAZE": "重度雾霾",
-	"LIGHT_RAIN": "小雨",
-	"MODERATE_RAIN": "中雨",
-	"HEAVY_RAIN": "大雨",
-	"STORM_RAIN": "暴雨",
-	"LIGHT_SNOW": "小雪",
-	"MODERATE_SNOW": "中雪",
-	"HEAVY_SNOW": "大雪",
-	"STORM_SNOW": "暴雪",
-	"DUST": "浮尘",
-	"SAND": "沙尘",
-	"WIND": "大风",
-	"FOG": "雾",
-}
-
-SKY_ICON: dict[str, str] = {
-	"CLEAR_DAY": "i-sun",
-	"CLEAR_NIGHT": "i-moon",
-	"PARTLY_CLOUDY_DAY": "i-cloud-sun",
-	"PARTLY_CLOUDY_NIGHT": "i-cloud-moon",
-	"CLOUDY": "i-cloud",
-	"LIGHT_HAZE": "i-haze",
-	"MODERATE_HAZE": "i-haze",
-	"HEAVY_HAZE": "i-haze",
-	"LIGHT_RAIN": "i-rain",
-	"MODERATE_RAIN": "i-rain",
-	"HEAVY_RAIN": "i-rain",
-	"STORM_RAIN": "i-rain",
-	"LIGHT_SNOW": "i-snow",
-	"MODERATE_SNOW": "i-snow",
-	"HEAVY_SNOW": "i-snow",
-	"STORM_SNOW": "i-snow",
-	"DUST": "i-haze",
-	"SAND": "i-haze",
-	"WIND": "i-wind",
-	"FOG": "i-haze",
-}
-
 WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-
-WIND_DIRECTIONS = [
-	"北",
-	"东北偏北",
-	"东北",
-	"东北偏东",
-	"东",
-	"东南偏东",
-	"东南",
-	"东南偏南",
-	"南",
-	"西南偏南",
-	"西南",
-	"西南偏西",
-	"西",
-	"西北偏西",
-	"西北",
-	"西北偏北",
-]
-
-LIFE_LABELS = {
-	"ultraviolet": "紫外线",
-	"carWashing": "洗车",
-	"dressing": "穿衣",
-	"comfort": "舒适度",
-	"coldRisk": "感冒",
-}
 
 QWEATHER_ICON: dict[str, str] = {
 	"100": "i-sun",
@@ -254,7 +168,7 @@ def qweather_get(config: dict[str, str], path: str, params: dict[str, Any] | Non
 
 def normalize_qweather_location(entry: dict[str, Any], fallback: dict[str, str] | None = None) -> dict[str, str]:
 	fallback = fallback or {}
-	location_id = str(entry.get("id") or fallback.get("key") or DEFAULT_CITY_KEY)
+	location_id = str(entry.get("id") or fallback.get("key") or DEFAULT_LOCATION_ID)
 	name = str(entry.get("name") or fallback.get("name") or location_id)
 	return {
 		"key": location_id,
@@ -398,20 +312,9 @@ def format_chart_number(value: float) -> str:
 	return f"{value:.1f}"
 
 
-def format_percent(value: Any) -> str:
-	if not isinstance(value, int | float):
-		return "暂无"
-	return f"{round(value * 100)}%"
-
-
 def format_datetime(value: str) -> str:
 	parsed = datetime.fromisoformat(value)
 	return f"{parsed.month}月{parsed.day}日 {parsed.strftime('%H:%M')}"
-
-
-def format_date(value: str) -> str:
-	parsed = datetime.fromisoformat(value)
-	return f"{parsed.month}月{parsed.day}日 {WEEKDAYS[parsed.weekday()]}"
 
 
 def format_time(value: str) -> str:
@@ -704,197 +607,21 @@ def build_qweather_daily(daily: dict[str, Any], life_index: list[dict[str, Any]]
 	return items
 
 
-def format_server_time(timestamp: int, tzshift: int) -> str:
-	server_timezone = timezone(timedelta(seconds=tzshift))
-	return datetime.fromtimestamp(timestamp, server_timezone).strftime("%Y-%m-%d %H:%M")
+def selected_location(location_id: str | None) -> dict[str, str]:
+	location_id = location_id or DEFAULT_LOCATION_ID
+	return {
+		"key": location_id,
+		"name": location_id,
+		"adm1": "",
+		"adm2": "",
+		"lat": "0",
+		"lon": "0",
+		"source": "qweather",
+	}
 
 
-def format_update_time(timestamp: int, tzshift: int) -> str:
-	server_timezone = timezone(timedelta(seconds=tzshift))
-	return datetime.fromtimestamp(timestamp, server_timezone).strftime("%m月%d日 %H:%M")
-
-
-def sky_text(value: str) -> str:
-	return SKY_TEXT.get(value, value)
-
-
-def sky_icon(value: str) -> str:
-	return SKY_ICON.get(value, "i-cloud")
-
-
-def wind_text(wind: dict[str, Any]) -> str:
-	direction = wind.get("direction", 0)
-	if not isinstance(direction, int | float):
-		direction = 0
-	name = WIND_DIRECTIONS[round(direction / 22.5) % len(WIND_DIRECTIONS)]
-	return f"{name}风 {format_number(wind.get('speed'))} km/h"
-
-
-def range_text(item: dict[str, Any], unit: str, scale: float = 1, digits: int = 1) -> str:
-	minimum = item.get("min")
-	maximum = item.get("max")
-	average = item.get("avg")
-	if not isinstance(minimum, int | float) or not isinstance(maximum, int | float) or not isinstance(average, int | float):
-		return "暂无"
-	return f"均 {format_number(average * scale, digits)} / {format_number(minimum * scale, digits)}-{format_number(maximum * scale, digits)} {unit}"
-
-
-def temperature_range(item: dict[str, Any]) -> str:
-	return f"{format_number(item.get('min'))}-{format_number(item.get('max'))}°C"
-
-
-def precipitation_text(item: dict[str, Any]) -> str:
-	return f"{range_text(item, 'mm/h')} · 概率 {format_number(item.get('probability'), 0)}%"
-
-
-def build_hourly(hourly: dict[str, Any]) -> list[dict[str, Any]]:
-	items: list[dict[str, Any]] = []
-	for index, temperature in enumerate(hourly["temperature"]):
-		precipitation = hourly["precipitation"][index]
-		wind = hourly["wind"][index]
-		humidity = hourly["humidity"][index]
-		cloudrate = hourly["cloudrate"][index]
-		pressure = hourly["pressure"][index]
-		visibility = hourly["visibility"][index]
-		dswrf = hourly["dswrf"][index]
-		air_quality = hourly["air_quality"]
-		items.append({
-			"datetime": format_datetime(temperature["datetime"]),
-			"time": format_time(temperature["datetime"]),
-			"icon": sky_icon(hourly["skycon"][index]["value"]),
-			"sky": sky_text(hourly["skycon"][index]["value"]),
-			"temperature": f"{format_number(temperature['value'])}°C",
-			"apparent_temperature": f"{format_number(hourly['apparent_temperature'][index]['value'])}°C",
-			"precipitation": f"{format_number(precipitation['value'])} mm/h",
-			"probability": f"{format_number(precipitation['probability'], 0)}%",
-			"wind": wind_text(wind),
-			"humidity": format_percent(humidity["value"]),
-			"cloudrate": format_percent(cloudrate["value"]),
-			"pressure": f"{format_number(pressure['value'] / 100)} hPa",
-			"visibility": f"{format_number(visibility['value'])} km",
-			"dswrf": f"{format_number(dswrf['value'], 0)} W/m²",
-			"aqi": air_quality["aqi"][index]["value"]["chn"],
-			"pm25": air_quality["pm25"][index]["value"],
-			"details": [
-				{"label": "体感", "value": f"{format_number(hourly['apparent_temperature'][index]['value'])}°C", "icon": "i-thermometer"},
-				{"label": "降水", "value": f"{format_number(precipitation['value'])} mm/h", "icon": "i-rain"},
-				{"label": "降水概率", "value": f"{format_number(precipitation['probability'], 0)}%", "icon": "i-droplet"},
-				{"label": "风", "value": wind_text(wind), "icon": "i-wind"},
-				{"label": "湿度", "value": format_percent(humidity["value"]), "icon": "i-droplet"},
-				{"label": "云量", "value": format_percent(cloudrate["value"]), "icon": "i-cloud"},
-				{"label": "气压", "value": f"{format_number(pressure['value'] / 100)} hPa", "icon": "i-gauge"},
-				{"label": "能见度", "value": f"{format_number(visibility['value'])} km", "icon": "i-eye"},
-				{"label": "AQI", "value": air_quality["aqi"][index]["value"]["chn"], "icon": "i-leaf"},
-				{"label": "PM2.5", "value": air_quality["pm25"][index]["value"], "icon": "i-haze"},
-			],
-		})
-	return items
-
-
-def build_life_index(life_index: dict[str, Any], index: int | None = None) -> list[dict[str, Any]]:
-	items: list[dict[str, Any]] = []
-	for key, label in LIFE_LABELS.items():
-		value = life_index.get(key)
-		if not value:
-			continue
-		entry = value if index is None else value[index]
-		items.append({
-			"label": label,
-			"index": entry.get("index", "暂无"),
-			"desc": entry.get("desc", "暂无"),
-		})
-	return items
-
-
-def build_home_life_index(realtime_life_index: dict[str, Any], daily_life_index: dict[str, Any]) -> list[dict[str, Any]]:
-	items: list[dict[str, Any]] = []
-	for key, label in LIFE_LABELS.items():
-		realtime_entry = realtime_life_index.get(key)
-		daily_entries = daily_life_index.get(key, [])
-		entry = realtime_entry or (daily_entries[0] if daily_entries else None)
-		if not entry:
-			continue
-		items.append({
-			"label": label,
-			"index": entry.get("index", "暂无"),
-			"desc": entry.get("desc", "暂无"),
-		})
-	return items
-
-
-def build_daily(daily: dict[str, Any]) -> list[dict[str, Any]]:
-	items: list[dict[str, Any]] = []
-	for index, temperature in enumerate(daily["temperature"]):
-		astro = daily["astro"][index]
-		air_quality = daily["air_quality"]
-		items.append({
-			"date": format_date(temperature["date"]),
-			"icon": sky_icon(daily["skycon"][index]["value"]),
-			"sky": sky_text(daily["skycon"][index]["value"]),
-			"temperature": temperature_range(temperature),
-			"precipitation": precipitation_text(daily["precipitation"][index]),
-			"sunrise": astro["sunrise"]["time"],
-			"sunset": astro["sunset"]["time"],
-			"parts": [
-				{
-					"label": "全天",
-					"sky": sky_text(daily["skycon"][index]["value"]),
-					"temperature": temperature_range(temperature),
-					"precipitation": precipitation_text(daily["precipitation"][index]),
-					"wind": range_text(daily["wind"][index], "km/h"),
-				},
-				{
-					"label": "08-20",
-					"sky": sky_text(daily["skycon_08h_20h"][index]["value"]),
-					"temperature": temperature_range(daily["temperature_08h_20h"][index]),
-					"precipitation": precipitation_text(daily["precipitation_08h_20h"][index]),
-					"wind": range_text(daily["wind_08h_20h"][index], "km/h"),
-				},
-				{
-					"label": "20-08",
-					"sky": sky_text(daily["skycon_20h_32h"][index]["value"]),
-					"temperature": temperature_range(daily["temperature_20h_32h"][index]),
-					"precipitation": precipitation_text(daily["precipitation_20h_32h"][index]),
-					"wind": range_text(daily["wind_20h_32h"][index], "km/h"),
-				},
-			],
-			"metrics": [
-				{"label": "湿度", "value": range_text(daily["humidity"][index], "%", 100, 0), "icon": "i-droplet"},
-				{"label": "AQI", "value": range_text({key: value["chn"] for key, value in air_quality["aqi"][index].items() if isinstance(value, dict)}, "", 1, 0), "icon": "i-leaf"},
-				{"label": "PM2.5", "value": range_text(air_quality["pm25"][index], "μg/m³", 1, 0), "icon": "i-haze"},
-			],
-			"details": [
-				{"label": "全天", "value": f"{sky_text(daily['skycon'][index]['value'])} · {temperature_range(temperature)}", "icon": sky_icon(daily["skycon"][index]["value"])},
-				{"label": "日间", "value": f"{sky_text(daily['skycon_08h_20h'][index]['value'])} · {temperature_range(daily['temperature_08h_20h'][index])}", "icon": sky_icon(daily["skycon_08h_20h"][index]["value"])},
-				{"label": "夜间", "value": f"{sky_text(daily['skycon_20h_32h'][index]['value'])} · {temperature_range(daily['temperature_20h_32h'][index])}", "icon": sky_icon(daily["skycon_20h_32h"][index]["value"])},
-				{"label": "降水", "value": precipitation_text(daily["precipitation"][index]), "icon": "i-rain"},
-				{"label": "日出", "value": astro["sunrise"]["time"], "icon": "i-sun"},
-				{"label": "日落", "value": astro["sunset"]["time"], "icon": "i-moon"},
-				{"label": "湿度", "value": range_text(daily["humidity"][index], "%", 100, 0), "icon": "i-droplet"},
-				{"label": "AQI", "value": range_text({key: value["chn"] for key, value in air_quality["aqi"][index].items() if isinstance(value, dict)}, "", 1, 0), "icon": "i-leaf"},
-				{"label": "PM2.5", "value": range_text(air_quality["pm25"][index], "μg/m³", 1, 0), "icon": "i-haze"},
-			],
-			"life_index": build_life_index(daily["life_index"], index),
-		})
-	return items
-
-
-def selected_city(location_id: str | None, city_key: str | None = None) -> dict[str, str]:
-	if location_id:
-		return {
-			"key": location_id,
-			"name": location_id,
-			"adm1": "",
-			"adm2": "",
-			"lat": "0",
-			"lon": "0",
-			"source": "qweather",
-		}
-	return CITY_BY_KEY.get(city_key or "", CITY_BY_KEY[DEFAULT_CITY_KEY])
-
-
-def load_weather(location_id: str | None = None, city_key: str | None = None) -> dict[str, Any]:
-	location = selected_city(location_id, city_key)
+def load_weather(location_id: str | None = None) -> dict[str, Any]:
+	location = selected_location(location_id)
 	payload, cache_hit = load_qweather_payload(location)
 	location = payload.get("_location", location)
 	now = payload["weather_now"]["now"]
@@ -986,12 +713,12 @@ def load_weather(location_id: str | None = None, city_key: str | None = None) ->
 
 @app.route("/")
 def index():
-	return render_template("index.html", weather=load_weather(request.args.get("location"), request.args.get("city")))
+	return render_template("index.html", weather=load_weather(request.args.get("location")))
 
 
 @app.get("/api/weather")
 def api_weather():
-	weather = load_weather(request.args.get("location"), request.args.get("city"))
+	weather = load_weather(request.args.get("location"))
 	return jsonify({
 		"cache_hit": weather["cache_hit"],
 		"updated_at": weather["updated_at_iso"],
