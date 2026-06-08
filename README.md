@@ -12,14 +12,22 @@ Flask weather dashboard using QWeather APIs. The app renders a Chinese weather U
 ## Project Layout
 
 ```text
-app.py                  Flask app, QWeather client, cache, data shaping, routes
-templates/index.html    Main Jinja template
-static/css/style.css    UI styling and responsive layout
-static/js/app.js        Refresh, city search, geolocation, modal interactions
-data/qweather_sample.json
-                        Local fallback sample payload
-requirements.txt        Python dependencies
-.env.example            Local QWeather configuration template
+weather_app/__init__.py   Flask app factory and package entrypoint
+weather_app/config.py     Paths, QWeather constants, icon maps, and in-memory caches
+weather_app/qweather.py   QWeather auth, GeoAPI lookup, API requests, cache, and fallback loading
+weather_app/view_models.py
+                          Dashboard data shaping from QWeather payloads
+weather_app/formatting.py Number and date/time formatting helpers
+weather_app/icons.py      QWeather icon and background theme mapping
+weather_app/routes.py     Page route and JSON API endpoints
+templates/index.html      Main Jinja template
+static/css/style.css      UI styling and responsive layout
+static/js/app.js          ES module bootstrap
+static/js/modules/        Frontend modules for API calls, city search, geolocation,
+                          refresh handling, modal behavior, navigation, and storage
+data/qweather_sample.json Local fallback sample payload
+requirements.txt          Python dependencies
+.env.example              Local QWeather configuration template
 ```
 
 ## Configuration
@@ -40,7 +48,7 @@ Do not commit `.env`; it is ignored by Git.
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m flask --app app run --host 127.0.0.1 --port 5000 --no-reload
+.\.venv\Scripts\python.exe -m flask --app "weather_app:create_app" run --host 127.0.0.1 --port 5000 --no-reload
 ```
 
 Open:
@@ -68,6 +76,7 @@ http://127.0.0.1:5000/
 ## Development Checks
 
 ```powershell
-python -m py_compile app.py
-C:\Users\JinxiHexi\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --check static/js/app.js
+.\.venv\Scripts\python.exe -m compileall weather_app
+$node = "C:\Users\JinxiHexi\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
+Get-ChildItem static\js -Recurse -Filter *.js | ForEach-Object { & $node --check $_.FullName }
 ```

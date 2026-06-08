@@ -2,34 +2,6 @@
   "provider": "QWeather",
   "api_enabled": false,
   "fetched_at": "2026-06-06T13:23:41+00:00",
-  "browser_location": {
-    "latitude": 25.647514,
-    "longitude": 114.774666,
-    "source": "Chrome geolocation on http://localhost:5000/",
-    "refreshed_at": "2026-06-06T13:23:41+00:00"
-  },
-  "api_notes": {
-    "auth": "JWT Ed25519; private key is intentionally not stored in this repository.",
-    "required_env": [
-      "QWEATHER_API_HOST",
-      "QWEATHER_KEY_ID",
-      "QWEATHER_PROJECT_ID",
-      "QWEATHER_PRIVATE_KEY"
-    ],
-    "jwt_mapping": {
-      "QWEATHER_KEY_ID": "JWT header kid",
-      "QWEATHER_PROJECT_ID": "JWT payload sub",
-      "QWEATHER_PRIVATE_KEY": "Ed25519 private key used to sign the JWT"
-    },
-    "endpoints": {
-      "geo_lookup": "/geo/v2/city/lookup",
-      "weather_now": "/v7/weather/now",
-      "weather_hourly": "/v7/weather/24h",
-      "weather_daily": "/v7/weather/7d",
-      "indices": "/v7/indices/1d",
-      "air_current": "/airquality/v1/current/{latitude}/{longitude}"
-    }
-  },
   "geo_lookup": {
     "code": "200",
     "location": [
