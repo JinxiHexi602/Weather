@@ -926,8 +926,8 @@ body[data-weather-theme="wind"] {
 }
 
 .chart-icon-wrap .weather-icon {
-	width: 20px;
-	height: 20px;
+	width: 24px;
+	height: 24px;
 }
 
 .hour-column:hover .chart-icon-wrap,
@@ -1163,15 +1163,30 @@ body[data-weather-theme="wind"] {
 .i-moon,
 .i-cloud,
 .i-cloud-sun,
+.i-partly-cloudy,
+.i-mostly-cloudy,
 .i-cloud-moon,
+.i-partly-cloudy-night,
+.i-mostly-cloudy-night,
+.i-shower,
+.i-light-rain,
 .i-rain,
+.i-heavy-rain,
+.i-thunderstorm,
+.i-hail,
 .i-snow,
+.i-heavy-snow,
+.i-sleet,
 .i-wind,
 .i-droplet,
 .i-eye,
 .i-gauge,
 .i-thermometer,
 .i-leaf,
+.i-fog,
+.i-dust,
+.i-hot,
+.i-cold,
 .i-haze {
 	background: currentColor;
 	mask-repeat: no-repeat;
@@ -1187,18 +1202,68 @@ body[data-weather-theme="wind"] {
 	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20.5 14.4A8 8 0 0 1 9.6 3.5a9 9 0 1 0 10.9 10.9Z'/%3E%3C/svg%3E");
 }
 
-.i-cloud,
-.i-cloud-sun,
+.i-cloud {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2018a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2018H7.5Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-cloud-sun {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%203a1%201%200%200%201%201%201v1a1%201%200%201%201-2%200V4a1%201%200%200%201%201-1Zm-4%205.4h1a1%201%200%201%201%200%202h-1a1%201%200%200%201%200-2Zm2-4a1%201%200%200%201%201.4%200l.7.7A1%201%200%201%201%206.2%206.5l-.7-.7a1%201%200%200%201%200-1.4Zm7.9%200a1%201%200%200%201%200%201.4l-.7.7a1%201%200%200%201-1.4-1.4l.7-.7a1%201%200%200%201%201.4%200ZM7.5%206.8a3.8%203.8%200%200%201%203.7%204.7%206.3%206.3%200%200%201%2010.6%203.3A3.6%203.6%200%200%201%2019.7%2021H8.2a4.4%204.4%200%200%201-.9-8.7%203.8%203.8%200%200%201%20.2-5.5Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-partly-cloudy {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M8%203a1%201%200%200%201%201%201v1.1a1%201%200%201%201-2%200V4a1%201%200%200%201%201-1Zm0%204.3a4.7%204.7%200%200%201%204.2%206.7%205.5%205.5%200%200%200-4.6%203.1%204.7%204.7%200%200%201%20.4-9.8ZM3.2%208.9h1.2a1%201%200%201%201%200%202H3.2a1%201%200%201%201%200-2ZM5%204.7a1%201%200%200%201%201.4%200l.8.8a1%201%200%201%201-1.4%201.4l-.8-.8a1%201%200%200%201%200-1.4Zm9.1%200a1%201%200%200%201%200%201.4l-.8.8a1%201%200%200%201-1.4-1.4l.8-.8a1%201%200%200%201%201.4%200Zm-7.1%2018a4.1%204.1%200%201%201%20.8-8.1%205.7%205.7%200%200%201%2010.7%202.9A3.3%203.3%200%200%201%2016.6%2022H7Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-mostly-cloudy {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M5.8%2013.5a4.2%204.2%200%201%201%201.1-8.2A5.4%205.4%200%200%201%2017%208.1a3.6%203.6%200%200%201%202.9%205.4h-14ZM7.7%2020a4.8%204.8%200%201%201%201-9.5%206.2%206.2%200%200%201%2011.7%203.1A3.7%203.7%200%200%201%2018.4%2020H7.7Z'%2F%3E%3C%2Fsvg%3E");
+}
+
 .i-cloud-moon {
-	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.5 18a5.5 5.5 0 1 1 1-10.9 7 7 0 0 1 13.1 3.4A4.25 4.25 0 0 1 19.3 18H7.5Z'/%3E%3C/svg%3E");
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M17.8%209.8A6%206%200%200%201%2010.3%202a7.2%207.2%200%200%200%208.9%208.9%205.6%205.6%200%200%201-1.4-1.1ZM7.6%2020a4.8%204.8%200%201%201%201-9.5%206.2%206.2%200%200%201%2011.7%203.1A3.7%203.7%200%200%201%2018.3%2020H7.6Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-partly-cloudy-night {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M18.9%2011.2A6.1%206.1%200%200%201%2011.7%203a7.4%207.4%200%200%200%209.4%209.4%205.6%205.6%200%200%201-2.2-1.2ZM7.3%2021a4.1%204.1%200%201%201%20.8-8.1%205.7%205.7%200%200%201%2010.7%202.9A3.3%203.3%200%200%201%2016.9%2021H7.3Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-mostly-cloudy-night {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M18.5%208.8A5.4%205.4%200%200%201%2012%202.4a6.6%206.6%200%200%200%207.7%207.7%205.4%205.4%200%200%201-1.2-1.3ZM5.8%2013.8a4.1%204.1%200%201%201%201-8%205.1%205.1%200%200%201%209.6%202.6%203.4%203.4%200%200%201%202.7%205.4H5.8ZM7.4%2020.5a4.5%204.5%200%201%201%20.9-8.8%205.8%205.8%200%200%201%2010.9%202.9%203.4%203.4%200%200%201-1.9%205.9H7.4Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-shower {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2015a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2015H7.5Zm1.9%201.8a1%201%200%200%201%20.4%201.4l-1.7%203a1%201%200%201%201-1.7-1l1.7-3a1%201%200%200%201%201.3-.4Zm6%200a1%201%200%200%201%20.4%201.4l-1.7%203a1%201%200%201%201-1.7-1l1.7-3a1%201%200%200%201%201.3-.4Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-light-rain {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2015a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2015H7.5Zm2.1%202.1a1%201%200%200%201%20.7%201.2l-.6%202.4a1%201%200%201%201-1.9-.5l.6-2.4a1%201%200%200%201%201.2-.7Zm6%200a1%201%200%200%201%20.7%201.2l-.6%202.4a1%201%200%201%201-1.9-.5l.6-2.4a1%201%200%200%201%201.2-.7Z'%2F%3E%3C%2Fsvg%3E");
 }
 
 .i-rain {
-	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.5 15a5.5 5.5 0 1 1 1-10.9 7 7 0 0 1 13.1 3.4A4.25 4.25 0 0 1 19.3 15H7.5Zm1.2 2.2a1 1 0 0 1 .6 1.3l-1 2.5a1 1 0 1 1-1.8-.8l1-2.4a1 1 0 0 1 1.2-.6Zm5 0a1 1 0 0 1 .6 1.3l-1 2.5a1 1 0 1 1-1.8-.8l1-2.4a1 1 0 0 1 1.2-.6Zm5 0a1 1 0 0 1 .6 1.3l-1 2.5a1 1 0 1 1-1.8-.8l1-2.4a1 1 0 0 1 1.2-.6Z'/%3E%3C/svg%3E");
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2015a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2015H7.5Zm1.2%202.2a1%201%200%200%201%20.6%201.3l-1%202.5a1%201%200%201%201-1.8-.8l1-2.4a1%201%200%200%201%201.2-.6Zm5%200a1%201%200%200%201%20.6%201.3l-1%202.5a1%201%200%201%201-1.8-.8l1-2.4a1%201%200%200%201%201.2-.6Zm5%200a1%201%200%200%201%20.6%201.3l-1%202.5a1%201%200%201%201-1.8-.8l1-2.4a1%201%200%200%201%201.2-.6Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-heavy-rain {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2015a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2015H7.5Zm.3%202.1a1%201%200%200%201%20.7%201.2l-.6%202.5a1%201%200%201%201-1.9-.5l.6-2.5a1%201%200%200%201%201.2-.7Zm4.3%200a1%201%200%200%201%20.7%201.2l-.6%202.5a1%201%200%201%201-1.9-.5l.6-2.5a1%201%200%200%201%201.2-.7Zm4.3%200a1%201%200%200%201%20.7%201.2l-.6%202.5a1%201%200%201%201-1.9-.5l.6-2.5a1%201%200%200%201%201.2-.7Zm4.3%200a1%201%200%200%201%20.7%201.2l-.6%202.5a1%201%200%201%201-1.9-.5l.6-2.5a1%201%200%200%201%201.2-.7Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-thunderstorm {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2014.8a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4%204.25%204.25%200%200%201-2.3%207.5H7.5Zm4.2%201.1h4.2l-2.2%203h3.2l-6.4%205%201.4-3.9H8.6l3.1-4.1Zm7.5%201.1a1%201%200%200%201%20.6%201.3l-1%202.5a1%201%200%200%201-1.8-.8l1-2.4a1%201%200%200%201%201.2-.6Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-hail {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2015a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2015H7.5ZM8%2018a1.3%201.3%200%201%201%200%202.6A1.3%201.3%200%200%201%208%2018Zm5%201a1.3%201.3%200%201%201%200%202.6A1.3%201.3%200%200%201%2013%2019Zm5-1a1.3%201.3%200%201%201%200%202.6A1.3%201.3%200%200%201%2018%2018Z'%2F%3E%3C%2Fsvg%3E");
 }
 
 .i-snow {
 	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.5 15a5.5 5.5 0 1 1 1-10.9 7 7 0 0 1 13.1 3.4A4.25 4.25 0 0 1 19.3 15H7.5ZM8 18a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm5 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm5 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z'/%3E%3C/svg%3E");
+}
+
+.i-heavy-snow {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2015a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2015H7.5ZM7%2017.5a1.4%201.4%200%201%201%200%202.8%201.4%201.4%200%200%201%200-2.8Zm4%202a1.4%201.4%200%201%201%200%202.8%201.4%201.4%200%200%201%200-2.8Zm4-2a1.4%201.4%200%201%201%200%202.8%201.4%201.4%200%200%201%200-2.8Zm4%202a1.4%201.4%200%201%201%200%202.8%201.4%201.4%200%200%201%200-2.8Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-sleet {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.5%2015a5.5%205.5%200%201%201%201-10.9%207%207%200%200%201%2013.1%203.4A4.25%204.25%200%200%201%2019.3%2015H7.5Zm1.2%202.1a1%201%200%200%201%20.6%201.3l-.9%202.2a1%201%200%201%201-1.8-.8l.9-2.2a1%201%200%200%201%201.2-.5ZM14%2018a1.5%201.5%200%201%201%200%203%201.5%201.5%200%200%201%200-3Zm5.2-.9a1%201%200%200%201%20.6%201.3l-.9%202.2a1%201%200%200%201-1.8-.8l.9-2.2a1%201%200%200%201%201.2-.5Z'%2F%3E%3C%2Fsvg%3E");
 }
 
 .i-wind {
@@ -1227,6 +1292,143 @@ body[data-weather-theme="wind"] {
 
 .i-haze {
 	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 8h16a1 1 0 1 1 0 2H4a1 1 0 1 1 0-2Zm2 5h12a1 1 0 1 1 0 2H6a1 1 0 1 1 0-2Zm3 5h6a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2Z'/%3E%3C/svg%3E");
+}
+
+.i-fog {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M7.4%2012.5a4%204%200%201%201%20.9-7.9%205.2%205.2%200%200%201%209.8%202.6%203.3%203.3%200%200%201%202.7%205.3H7.4ZM4%2016h16a1%201%200%201%201%200%202H4a1%201%200%201%201%200-2Zm3%204h10a1%201%200%201%201%200%202H7a1%201%200%201%201%200-2Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-dust {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M4%207h11a2%202%200%201%200-1.7-3%201%201%200%201%201-1.7-1A4%204%200%201%201%2015%209H4a1%201%200%200%201%200-2Zm1%205h13a3%203%200%201%201-2.6%204.5%201%201%200%201%201%201.7-1%201%201%200%201%200%20.9-1.5H5a1%201%200%201%201%200-2Zm-1%206h8a1%201%200%201%201%200%202H4a1%201%200%201%201%200-2Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-hot {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M12%205a1%201%200%200%201%201-1V2a1%201%200%201%200-2%200v2a1%201%200%200%201%201%201Zm0%202a5%205%200%201%201%200%2010%205%205%200%200%201%200-10Zm9%204h1a1%201%200%201%201%200%202h-1a1%201%200%201%201%200-2ZM2%2011h1a1%201%200%201%201%200%202H2a1%201%200%201%201%200-2Zm16.4-6.8a1%201%200%200%201%201.4%201.4l-.8.8A1%201%200%200%201%2017.6%205l.8-.8ZM5%2017.6A1%201%200%200%201%206.4%2019l-.8.8a1%201%200%200%201-1.4-1.4l.8-.8Zm0-11.2-.8-.8a1%201%200%200%201%201.4-1.4l.8.8A1%201%200%200%201%205%206.4Zm13%2011.2.8.8a1%201%200%200%201-1.4%201.4l-.8-.8a1%201%200%200%201%201.4-1.4Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-cold {
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M11%202a1%201%200%201%201%202%200v4.1l2.4-2.4a1%201%200%201%201%201.4%201.4L13%208.9V11h2.1l3.8-3.8a1%201%200%201%201%201.4%201.4L17.9%2011H22a1%201%200%201%201%200%202h-4.1l2.4%202.4a1%201%200%201%201-1.4%201.4L15.1%2013H13v2.1l3.8%203.8a1%201%200%201%201-1.4%201.4L13%2017.9V22a1%201%200%201%201-2%200v-4.1l-2.4%202.4a1%201%200%201%201-1.4-1.4l3.8-3.8V13H8.9l-3.8%203.8a1%201%200%201%201-1.4-1.4L6.1%2013H2a1%201%200%201%201%200-2h4.1L3.7%208.6a1%201%200%201%201%201.4-1.4L8.9%2011H11V8.9L7.2%205.1a1%201%200%201%201%201.4-1.4L11%206.1V2Z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.i-sun,
+.i-moon,
+.i-cloud,
+.i-cloud-sun,
+.i-partly-cloudy,
+.i-mostly-cloudy,
+.i-cloud-moon,
+.i-partly-cloudy-night,
+.i-mostly-cloudy-night,
+.i-shower,
+.i-light-rain,
+.i-rain,
+.i-heavy-rain,
+.i-thunderstorm,
+.i-hail,
+.i-snow,
+.i-heavy-snow,
+.i-sleet,
+.i-fog,
+.i-haze,
+.i-dust,
+.i-hot,
+.i-cold {
+	background-color: transparent;
+	background-image: var(--weather-icon-image);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	mask-image: none;
+	-webkit-mask-image: none;
+}
+
+.i-sun {
+	--weather-icon-image: url("../icons/weather/sun.svg");
+}
+
+.i-moon {
+	--weather-icon-image: url("../icons/weather/moon.svg");
+}
+
+.i-cloud {
+	--weather-icon-image: url("../icons/weather/cloud.svg");
+}
+
+.i-cloud-sun {
+	--weather-icon-image: url("../icons/weather/cloud-sun.svg");
+}
+
+.i-partly-cloudy {
+	--weather-icon-image: url("../icons/weather/partly-cloudy.svg");
+}
+
+.i-mostly-cloudy {
+	--weather-icon-image: url("../icons/weather/mostly-cloudy.svg");
+}
+
+.i-cloud-moon,
+.i-partly-cloudy-night {
+	--weather-icon-image: url("../icons/weather/cloud-moon.svg");
+}
+
+.i-mostly-cloudy-night {
+	--weather-icon-image: url("../icons/weather/mostly-cloudy-night.svg");
+}
+
+.i-shower {
+	--weather-icon-image: url("../icons/weather/shower.svg");
+}
+
+.i-light-rain {
+	--weather-icon-image: url("../icons/weather/light-rain.svg");
+}
+
+.i-rain {
+	--weather-icon-image: url("../icons/weather/rain.svg");
+}
+
+.i-heavy-rain {
+	--weather-icon-image: url("../icons/weather/heavy-rain.svg");
+}
+
+.i-thunderstorm {
+	--weather-icon-image: url("../icons/weather/thunderstorm.svg");
+}
+
+.i-hail {
+	--weather-icon-image: url("../icons/weather/hail.svg");
+}
+
+.i-snow {
+	--weather-icon-image: url("../icons/weather/snow.svg");
+}
+
+.i-heavy-snow {
+	--weather-icon-image: url("../icons/weather/heavy-snow.svg");
+}
+
+.i-sleet {
+	--weather-icon-image: url("../icons/weather/sleet.svg");
+}
+
+.i-fog {
+	--weather-icon-image: url("../icons/weather/fog.svg");
+}
+
+.i-haze {
+	--weather-icon-image: url("../icons/weather/haze.svg");
+}
+
+.i-dust {
+	--weather-icon-image: url("../icons/weather/dust.svg");
+}
+
+.i-hot {
+	--weather-icon-image: url("../icons/weather/hot.svg");
+}
+
+.i-cold {
+	--weather-icon-image: url("../icons/weather/cold.svg");
 }
 
 @keyframes weather-background-shift {
@@ -1408,8 +1610,8 @@ body[data-weather-theme="wind"] {
 	}
 
 	.chart-icon-wrap .weather-icon {
-		width: 18px;
-		height: 18px;
+		width: 20px;
+		height: 20px;
 	}
 
 	.chart-pop-label {

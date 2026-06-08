@@ -29,14 +29,66 @@ WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"
 
 QWEATHER_ICON: dict[str, str] = {
 	"100": "i-sun",
-	"101": "i-cloud-sun",
-	"102": "i-cloud-sun",
+	"101": "i-mostly-cloudy",
+	"102": "i-partly-cloudy",
 	"103": "i-cloud-sun",
 	"104": "i-cloud",
 	"150": "i-moon",
-	"151": "i-cloud-moon",
-	"152": "i-cloud-moon",
+	"151": "i-mostly-cloudy-night",
+	"152": "i-partly-cloudy-night",
 	"153": "i-cloud-moon",
+	"300": "i-shower",
+	"301": "i-shower",
+	"302": "i-thunderstorm",
+	"303": "i-thunderstorm",
+	"304": "i-hail",
+	"305": "i-light-rain",
+	"306": "i-rain",
+	"307": "i-heavy-rain",
+	"308": "i-heavy-rain",
+	"309": "i-light-rain",
+	"310": "i-heavy-rain",
+	"311": "i-heavy-rain",
+	"312": "i-heavy-rain",
+	"313": "i-hail",
+	"314": "i-rain",
+	"315": "i-rain",
+	"316": "i-heavy-rain",
+	"317": "i-heavy-rain",
+	"318": "i-heavy-rain",
+	"350": "i-shower",
+	"351": "i-shower",
+	"399": "i-rain",
+	"400": "i-snow",
+	"401": "i-snow",
+	"402": "i-heavy-snow",
+	"403": "i-heavy-snow",
+	"404": "i-sleet",
+	"405": "i-sleet",
+	"406": "i-sleet",
+	"407": "i-snow",
+	"408": "i-snow",
+	"409": "i-snow",
+	"410": "i-heavy-snow",
+	"456": "i-sleet",
+	"457": "i-snow",
+	"499": "i-snow",
+	"500": "i-fog",
+	"501": "i-fog",
+	"502": "i-haze",
+	"503": "i-dust",
+	"504": "i-dust",
+	"507": "i-dust",
+	"508": "i-dust",
+	"509": "i-fog",
+	"510": "i-fog",
+	"511": "i-haze",
+	"512": "i-haze",
+	"513": "i-haze",
+	"514": "i-fog",
+	"515": "i-fog",
+	"900": "i-hot",
+	"901": "i-cold",
 }
 
 QWEATHER_LIFE_TYPES = {
@@ -331,14 +383,45 @@ def qweather_icon(icon: Any, text: str = "") -> str:
 	icon_text = str(icon)
 	if icon_text in QWEATHER_ICON:
 		return QWEATHER_ICON[icon_text]
-	if icon_text.startswith("3") or "雨" in text:
+
+	if "冰雹" in text:
+		return "i-hail"
+	if "雨夹雪" in text or "冻雨" in text:
+		return "i-sleet"
+	if icon_text.startswith("3") or "雨" in text or "雷" in text:
+		if "雷" in text:
+			return "i-thunderstorm"
+		if "阵雨" in text:
+			return "i-shower"
+		if any(keyword in text for keyword in ("大雨", "暴雨", "强降雨")):
+			return "i-heavy-rain"
+		if "小雨" in text or "毛毛雨" in text:
+			return "i-light-rain"
 		return "i-rain"
 	if icon_text.startswith("4") or "雪" in text:
+		if "暴雪" in text or "大雪" in text:
+			return "i-heavy-snow"
 		return "i-snow"
 	if icon_text.startswith("5") or any(keyword in text for keyword in ("雾", "霾", "沙", "尘")):
+		if "沙" in text or "尘" in text:
+			return "i-dust"
+		if "雾" in text:
+			return "i-fog"
 		return "i-haze"
+	if "热" in text or "高温" in text:
+		return "i-hot"
+	if "冷" in text or "低温" in text:
+		return "i-cold"
 	if "风" in text:
 		return "i-wind"
+	if "少云" in text or "晴间多云" in text:
+		return "i-partly-cloudy"
+	if "夜" in text:
+		if "多云" in text:
+			return "i-mostly-cloudy-night"
+		return "i-cloud-moon"
+	if "多云" in text:
+		return "i-mostly-cloudy"
 	return "i-cloud"
 
 
