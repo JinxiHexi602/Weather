@@ -6,15 +6,18 @@ const updateInfo = document.querySelector("#update-info");
 const updateTime = document.querySelector("#update-time");
 const refreshButton = document.querySelector("#refresh-weather");
 const cityPicker = document.querySelector("#city-picker");
+const cityDisplay = document.querySelector("#city-display");
 const citySearch = document.querySelector("#city-search");
 const cityLocation = document.querySelector("#city-location");
 const cityResults = document.querySelector("#city-results");
+const locateButton = document.querySelector("#locate-button");
 let activeTrigger = null;
 let closeTimer = null;
 let lastUpdatedAt = parseUpdatedAt(updateTime?.dataset.updatedAt);
 let refreshTimer = null;
 let updateTimer = null;
 let citySearchTimer = null;
+let cityPickerTimer = null;
 let activeCityResults = [];
 let locationFallbackApplied = false;
 
@@ -183,6 +186,15 @@ function saveSelectedCity(cityKey) {
 	}
 }
 
+function readStoredPosition() {
+	try {
+		const stored = window.localStorage.getItem("weather:last-position");
+		return stored ? JSON.parse(stored) : null;
+	} catch {
+		return null;
+	}
+}
+
 function currentRequestedLocation() {
 	const params = new URLSearchParams(window.location.search);
 	return params.get("location") || "";
@@ -239,6 +251,42 @@ function hideCityResults() {
 	cityResults.innerHTML = "";
 	citySearch.setAttribute("aria-expanded", "false");
 	activeCityResults = [];
+}
+
+function openCityPicker() {
+	if (!cityPicker || !citySearch || !cityDisplay) {
+		return;
+	}
+
+	window.clearTimeout(cityPickerTimer);
+	citySearch.disabled = false;
+	citySearch.tabIndex = 0;
+	cityPicker.classList.add("is-editing");
+	cityDisplay.setAttribute("aria-expanded", "true");
+	window.requestAnimationFrame(() => {
+		citySearch.focus();
+		citySearch.select();
+	});
+}
+
+function closeCityPicker() {
+	if (!cityPicker || !citySearch || !cityDisplay) {
+		return;
+	}
+
+	cityPicker.classList.remove("is-editing");
+	cityDisplay.setAttribute("aria-expanded", "false");
+	if (cityDisplay.textContent && citySearch.value.trim() !== cityDisplay.textContent.trim()) {
+		citySearch.value = cityDisplay.textContent.trim();
+	}
+	hideCityResults();
+	window.clearTimeout(cityPickerTimer);
+	cityPickerTimer = window.setTimeout(() => {
+		if (!cityPicker.classList.contains("is-editing")) {
+			citySearch.disabled = true;
+			citySearch.tabIndex = -1;
+		}
+	}, 220);
 }
 
 function renderCityResults(cities) {
@@ -302,6 +350,9 @@ function selectCity(city) {
 
 	cityLocation.value = city.key;
 	citySearch.value = city.name;
+	if (cityDisplay) {
+		cityDisplay.textContent = city.name;
+	}
 	saveSelectedCity(city.key);
 	hideCityResults();
 	if (typeof cityPicker.requestSubmit === "function") {
@@ -312,13 +363,17 @@ function selectCity(city) {
 }
 
 function initCityPicker() {
-	if (!cityPicker || !citySearch || !cityLocation) {
+	if (!cityPicker || !citySearch || !cityLocation || !cityDisplay) {
 		return false;
 	}
 
 	if (currentRequestedLocation() && cityLocation.value) {
 		saveSelectedCity(cityLocation.value);
 	}
+	citySearch.disabled = true;
+	citySearch.tabIndex = -1;
+
+	cityDisplay.addEventListener("click", openCityPicker);
 
 	citySearch.addEventListener("input", () => {
 		cityLocation.value = "";
@@ -327,6 +382,12 @@ function initCityPicker() {
 
 	citySearch.addEventListener("keydown", (event) => {
 		if (event.key === "Escape") {
+			event.preventDefault();
+			closeCityPicker();
+			cityDisplay.focus();
+			return;
+		}
+		if (event.key === "Tab") {
 			hideCityResults();
 			return;
 		}
@@ -338,7 +399,7 @@ function initCityPicker() {
 
 	document.addEventListener("click", (event) => {
 		if (!cityPicker.contains(event.target)) {
-			hideCityResults();
+			closeCityPicker();
 		}
 	});
 
@@ -381,6 +442,7 @@ function saveLocation(position) {
 		locationInfo.dataset.browserLongitude = String(coordinates.longitude);
 		locationInfo.title = `已定位：${coordinates.latitude}, ${coordinates.longitude}`;
 	}
+	locateButton?.removeAttribute("aria-busy");
 
 	return coordinates;
 }
@@ -391,6 +453,7 @@ function handleLocationError(error) {
 		locationInfo.classList.add("is-location-denied");
 		locationInfo.title = error?.message ? `定位未启用：${error.message}` : "定位未启用";
 	}
+	locateButton?.removeAttribute("aria-busy");
 	fallbackToStoredLocation();
 }
 
@@ -408,6 +471,9 @@ async function resolveBrowserLocation(position) {
 			if (citySearch && city.name) {
 				citySearch.value = city.name;
 			}
+			if (cityDisplay && city.name) {
+				cityDisplay.textContent = city.name;
+			}
 			saveSelectedCity(city.key);
 			navigateToLocation(city.key, true);
 			return;
@@ -422,7 +488,11 @@ async function resolveBrowserLocation(position) {
 }
 
 function requestBrowserLocation() {
-	if (currentRequestedLocation()) {
+	return requestBrowserLocationWithOptions();
+}
+
+function requestBrowserLocationWithOptions({force = false} = {}) {
+	if (!force && currentRequestedLocation()) {
 		return false;
 	}
 
@@ -432,6 +502,8 @@ function requestBrowserLocation() {
 	}
 
 	locationInfo?.classList.add("is-locating");
+	locationInfo?.classList.remove("is-located", "is-location-denied");
+	locateButton?.setAttribute("aria-busy", "true");
 	navigator.geolocation.getCurrentPosition(resolveBrowserLocation, handleLocationError, {
 		enableHighAccuracy: true,
 		maximumAge: 5 * 60 * 1000,
@@ -440,9 +512,28 @@ function requestBrowserLocation() {
 	return true;
 }
 
+function initLocationStatus() {
+	if (!locationInfo) {
+		return;
+	}
+
+	const stored = readStoredPosition();
+	if (stored?.latitude && stored?.longitude) {
+		locationInfo.classList.add("is-located");
+		locationInfo.dataset.browserLatitude = String(stored.latitude);
+		locationInfo.dataset.browserLongitude = String(stored.longitude);
+		locationInfo.title = `已定位：${stored.latitude}, ${stored.longitude}`;
+		return;
+	}
+
+	locationInfo.classList.add("is-location-denied");
+}
+
 initCityPicker();
+initLocationStatus();
 renderUpdateTime();
 requestBrowserLocation();
+locateButton?.addEventListener("click", () => requestBrowserLocationWithOptions({force: true}));
 
 function settleOpenAnimation() {
 	if (!backdrop) {

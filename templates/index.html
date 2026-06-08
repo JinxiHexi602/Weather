@@ -13,15 +13,15 @@
 	<div class="app-shell">
 		<header class="topbar">
 			<div class="top-info location-info" id="location-info" data-location-id="{{ weather.location.id }}" data-location-name="{{ weather.place }}" data-latitude="{{ weather.location.lat }}" data-longitude="{{ weather.location.lon }}">
-				<span class="info-label icon-label" aria-label="当前位置">
+				<button class="info-label icon-label location-button" id="locate-button" type="button" aria-label="重新定位" title="重新定位">
 					<span class="location-icon" aria-hidden="true"></span>
-				</span>
+				</button>
 				<form class="city-picker" id="city-picker" action="/" method="get" autocomplete="off">
+					<button class="city-display" id="city-display" type="button" aria-expanded="false" aria-controls="city-search city-results">{{ weather.place }}</button>
 					<label class="sr-only" for="city-search">搜索城市</label>
 					<input class="city-search" id="city-search" type="search" name="q" value="{{ weather.place }}" placeholder="搜索城市" aria-label="搜索城市" aria-autocomplete="list" aria-expanded="false" aria-controls="city-results">
 					<input id="city-location" type="hidden" name="location" value="{{ weather.location.id }}">
 					<div class="city-results" id="city-results" role="listbox" hidden></div>
-					<button class="city-submit" type="submit">切换</button>
 				</form>
 			</div>
 			<div class="top-info align-end update-info" id="update-info">
@@ -70,31 +70,22 @@
 				</div>
 				<div class="hourly-chart simplified">
 					<div class="hourly-chart-frame" role="img" aria-labelledby="hourly-chart-title">
-						<span id="hourly-chart-title" class="sr-only">未来 24 小时温度趋势和降水概率</span>
-						<svg class="hourly-line-chart simplified" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
-							{% for tick in weather.hourly_chart.ticks %}
-								<line class="chart-grid-line" x1="20" y1="{{ tick.y }}" x2="980" y2="{{ tick.y }}"></line>
-							{% endfor %}
-							<line class="chart-axis" x1="20" y1="{{ weather.hourly_chart.bar_bottom }}" x2="980" y2="{{ weather.hourly_chart.bar_bottom }}"></line>
+						<span id="hourly-chart-title" class="sr-only">未来 24 小时温度柱状图和降水概率</span>
+						<div class="hourly-bars">
 							{% for point in weather.hourly_chart.points %}
-								{% if point.bar_height != "0" %}
-									<line class="chart-rain-bar" x1="{{ point.x }}" y1="{{ point.bar_y }}" x2="{{ point.x }}" y2="{{ weather.hourly_chart.bar_bottom }}"></line>
-								{% endif %}
+								<button class="hour-column detail-trigger" type="button" aria-label="查看 {{ point.time }} 天气详情，{{ point.temperature }}°C，{{ point.sky }}，降水概率 {{ point.probability }}" data-modal-target="modal-hour-{{ point.index }}" style="--bar-height: {{ point.bar_height_px }}px;">
+									<span class="chart-bar-stack">
+										<span class="chart-temp-label">{{ point.temperature }}°</span>
+										<span class="chart-temp-bar" aria-hidden="true"></span>
+									</span>
+									<span class="chart-time-label">{{ point.time }}</span>
+									<span class="chart-icon-wrap">
+										<span class="weather-icon {{ point.icon }}"></span>
+									</span>
+									<span class="chart-pop-label">{{ point.probability }}</span>
+								</button>
 							{% endfor %}
-							<polyline class="chart-line" points="{{ weather.hourly_chart.polyline }}"></polyline>
-						</svg>
-						{% for point in weather.hourly_chart.points %}
-							<button class="chart-hour-overlay detail-trigger" type="button" aria-label="查看 {{ point.time }} 天气详情，{{ point.temperature }}°C，{{ point.sky }}，降水概率 {{ point.probability }}" data-modal-target="modal-hour-{{ point.index }}" style="--x: {{ point.x_percent }}%; --y: {{ point.y_percent }}%; --label-y: {{ point.label_y_percent }}%;">
-								{% if point.show_label %}
-									<span class="chart-temp-label">{{ point.temperature }}°</span>
-								{% endif %}
-								<span class="chart-dot-overlay"></span>
-								<span class="chart-time-label">{{ point.time }}</span>
-								<span class="chart-icon-wrap">
-									<span class="weather-icon {{ point.icon }}"></span>
-								</span>
-							</button>
-						{% endfor %}
+						</div>
 					</div>
 				</div>
 			</section>

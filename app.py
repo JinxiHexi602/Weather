@@ -23,6 +23,7 @@ QWEATHER_TIMEOUT_SECONDS = 10
 QWEATHER_JWT_TTL_SECONDS = 900
 QWEATHER_LANGUAGE = "zh"
 QWEATHER_MAX_FETCH_ATTEMPTS = 3
+HOURLY_PREVIEW_COUNT = 24
 
 WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
@@ -458,18 +459,12 @@ def chart_coord(value: float) -> str:
 
 
 def build_hourly_chart(hourly_items: list[dict[str, Any]]) -> dict[str, Any]:
-	visible_items = hourly_items[:24]
+	visible_items = hourly_items[:HOURLY_PREVIEW_COUNT]
 	values = [item.get("temperature_value") for item in visible_items if isinstance(item.get("temperature_value"), int | float)]
 	if not visible_items or not values:
 		return {
 			"points": [],
-			"ticks": [],
-			"time_labels": [],
-			"polyline": "",
-			"area_path": "",
 			"temperature_range": "暂无",
-			"bar_bottom": "146",
-			"time_y": "178",
 		}
 
 	min_temp = math.floor(min(values))
@@ -478,81 +473,27 @@ def build_hourly_chart(hourly_items: list[dict[str, Any]]) -> dict[str, Any]:
 		min_temp -= 1
 		max_temp += 1
 
-	width = 1000
-	left = 20
-	right = 980
-	top = 32
-	line_height = 92
-	bar_bottom = 146
-	max_bar_height = 26
-	count = len(visible_items)
-	span = right - left
-	step = span / (count - 1 if count > 1 else 1)
-	hit_width = min(40, step * .92)
-	icon_size = 28
-	icon_y = 194
-	time_y = 178
 	temp_span = max_temp - min_temp
-	min_label_index = next((index for index, value in enumerate(values) if value == min(values)), 0)
-	max_label_index = next((index for index, value in enumerate(values) if value == max(values)), 0)
 
 	points: list[dict[str, Any]] = []
 	for index, item in enumerate(visible_items):
 		temp_value = item.get("temperature_value")
 		if not isinstance(temp_value, int | float):
 			temp_value = min_temp
-		pop_value = item.get("probability_value") if isinstance(item.get("probability_value"), int | float) else 0
-		x = left + (span * index / (count - 1 if count > 1 else 1))
-		y = top + ((max_temp - temp_value) / temp_span * line_height)
-		bar_height = max(3, pop_value / 100 * max_bar_height) if pop_value else 0
-		show_label = index in {min_label_index, max_label_index}
+		bar_height = max(10, (temp_value - min_temp) / temp_span * 44 + 14)
 		points.append({
 			"index": index,
-			"x": chart_coord(x),
-			"y": chart_coord(y),
-			"x_percent": chart_coord(x / width * 100),
-			"y_percent": chart_coord(y / 240 * 100),
-			"hit_x": chart_coord(x - hit_width / 2),
-			"hit_width": chart_coord(hit_width),
-			"icon_x": chart_coord(x - icon_size / 2),
-			"icon_y": chart_coord(icon_y),
-			"label_y": chart_coord(max(18, y - 12)),
-			"label_y_percent": chart_coord(max(18, y - 12) / 240 * 100),
-			"bar_y": chart_coord(bar_bottom - bar_height),
-			"bar_height": chart_coord(bar_height),
+			"bar_height_px": chart_coord(bar_height),
 			"time": item["time"],
 			"icon": item["icon"],
 			"sky": item["sky"],
 			"temperature": format_chart_number(temp_value),
 			"probability": item["probability"],
-			"show_label": show_label,
 		})
-
-	tick_values = [max_temp, round((max_temp + min_temp) / 2), min_temp]
-	ticks = []
-	for value in dict.fromkeys(tick_values):
-		y = top + ((max_temp - value) / temp_span * line_height)
-		ticks.append({"label": format_chart_number(value), "y": chart_coord(y)})
-
-	time_labels = [
-		{"label": point["time"], "x": point["x"]}
-		for point in points
-		if point["index"] % 3 == 0 or point["index"] == count - 1
-	]
-
-	polyline = " ".join(f"{point['x']},{point['y']}" for point in points)
-	area_path = f"M {points[0]['x']} {bar_bottom} L {polyline.replace(' ', ' L ')} L {points[-1]['x']} {bar_bottom} Z"
 
 	return {
 		"points": points,
-		"ticks": ticks,
-		"time_labels": time_labels,
-		"polyline": polyline,
-		"area_path": area_path,
 		"temperature_range": f"{min_temp}°C - {max_temp}°C",
-		"bar_bottom": chart_coord(bar_bottom),
-		"time_y": chart_coord(time_y),
-		"width": width,
 	}
 
 
