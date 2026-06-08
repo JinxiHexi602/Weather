@@ -673,7 +673,10 @@ body[data-weather-theme="wind"] {
 }
 
 .air-panel,
+.alert-panel,
+.astronomy-panel,
 .life-panel,
+.minutely-panel,
 .forecast-panel,
 .daily-panel {
 	min-width: 0;
@@ -717,6 +720,68 @@ body[data-weather-theme="wind"] {
 	color: var(--quality);
 }
 
+.air-guidance span {
+	color: var(--text-muted);
+}
+
+.panel-note {
+	margin: 0;
+	color: var(--text-muted);
+	line-height: 1.55;
+}
+
+.alert-panel {
+	border-color: rgba(0, 120, 212, .18);
+}
+
+.alert-panel.is-active {
+	border-color: rgba(209, 52, 56, .36);
+	background: rgba(253, 231, 233, .82);
+}
+
+.alert-list {
+	display: grid;
+	gap: 10px;
+}
+
+.alert-card {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 12px 14px;
+	border: 1px solid rgba(209, 52, 56, .24);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, .62);
+}
+
+.alert-card .weather-icon {
+	color: #d13438;
+}
+
+.alert-card div {
+	display: grid;
+	gap: 4px;
+	min-width: 0;
+}
+
+.alert-card span,
+.alert-card small,
+.minute-summary,
+.minute-point span,
+.air-point span,
+.air-point small,
+.air-forecast-grid h3 {
+	color: var(--text-muted);
+}
+
+.alert-card small {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-height: 1.45;
+}
+
 .air-summary {
 	display: grid;
 	grid-template-columns: 158px minmax(0, 1fr);
@@ -750,6 +815,128 @@ body[data-weather-theme="wind"] {
 	color: var(--quality);
 	font-size: 44px;
 	font-weight: 600;
+}
+
+.aqi-score > span {
+	color: var(--text-muted);
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.air-content {
+	display: grid;
+	align-content: space-between;
+	gap: 12px;
+	min-width: 0;
+}
+
+.air-guidance {
+	display: grid;
+	gap: 5px;
+	padding: 12px 14px;
+	border: 1px solid var(--stroke-strong);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, .52);
+}
+
+.air-guidance strong {
+	font-size: 15px;
+	font-weight: 500;
+	line-height: 1.55;
+}
+
+.air-forecast-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+	gap: 14px;
+	margin-top: 16px;
+}
+
+.air-forecast-grid h3 {
+	margin: 0 0 10px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.air-timeline {
+	display: grid;
+	grid-template-columns: repeat(8, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.air-point {
+	display: grid;
+	min-height: 82px;
+	align-content: space-between;
+	gap: 4px;
+	padding: 10px;
+	border: 1px solid var(--stroke-strong);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, .52);
+}
+
+.air-point strong {
+	color: var(--quality);
+	font-size: 20px;
+	font-weight: 600;
+}
+
+.minutely-panel {
+	overflow: hidden;
+}
+
+.minute-summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 12px;
+	font-size: 13px;
+}
+
+.minute-summary span {
+	display: inline-flex;
+	align-items: center;
+	min-height: 26px;
+	padding: 0 10px;
+	border: 1px solid var(--stroke-strong);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, .54);
+}
+
+.minute-bars {
+	display: grid;
+	grid-template-columns: repeat(24, minmax(0, 1fr));
+	gap: 6px;
+	align-items: end;
+	min-height: 104px;
+}
+
+.minute-point {
+	display: grid;
+	justify-items: center;
+	gap: 6px;
+	min-width: 0;
+	font-size: 11px;
+}
+
+.minute-bar {
+	display: block;
+	width: 5px;
+	height: var(--minute-bar-height);
+	min-height: 6px;
+	border-radius: 999px;
+	background: rgba(0, 120, 212, .22);
+}
+
+.minute-point.is-rain .minute-bar {
+	background: var(--accent);
+	box-shadow: 0 4px 14px rgba(0, 120, 212, .2);
+}
+
+.astro-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
 }
 
 .compact-chips {
@@ -791,16 +978,29 @@ body[data-weather-theme="wind"] {
 	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
+.life-grid.split-eight {
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .life-card {
 	display: grid;
 	min-height: 96px;
 	align-content: space-between;
+	gap: 8px;
 	padding: 14px;
 }
 
 .life-card strong {
 	font-size: 18px;
 	font-weight: 600;
+}
+
+.life-card small {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-height: 1.45;
 }
 
 .hourly-grid {
@@ -1160,6 +1360,7 @@ body[data-weather-theme="wind"] {
 }
 
 .i-sun,
+.i-alert,
 .i-moon,
 .i-cloud,
 .i-cloud-sun,
@@ -1196,6 +1397,10 @@ body[data-weather-theme="wind"] {
 
 .i-sun {
 	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4a1 1 0 0 1 1-1h0a1 1 0 0 1-2 0 1 1 0 0 1 1 1Zm0 16a1 1 0 0 1 1 1h0a1 1 0 0 1-2 0 1 1 0 0 1 1-1Zm8-8a1 1 0 0 1 1-1h0a1 1 0 0 1 0 2 1 1 0 0 1-1-1ZM3 12a1 1 0 0 1 1-1h0a1 1 0 0 1 0 2 1 1 0 0 1-1-1Zm14.95-5.95a1 1 0 0 1 1.41 0h0a1 1 0 0 1-1.41 1.41 1 1 0 0 1 0-1.41ZM4.64 17.36a1 1 0 0 1 1.41 0h0a1 1 0 0 1-1.41 1.41 1 1 0 0 1 0-1.41Zm0-11.31a1 1 0 0 1 1.41 0h0a1 1 0 0 1-1.41 1.41 1 1 0 0 1 0-1.41Zm13.31 11.31a1 1 0 0 1 1.41 0h0a1 1 0 0 1-1.41 1.41 1 1 0 0 1 0-1.41ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z'/%3E%3C/svg%3E");
+}
+
+.i-alert {
+	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10.3 3.7a2 2 0 0 1 3.4 0l8 14A2 2 0 0 1 20 21H4a2 2 0 0 1-1.7-3.3l8-14ZM11 8v6h2V8h-2Zm0 8v2h2v-2h-2Z'/%3E%3C/svg%3E");
 }
 
 .i-moon {
@@ -1519,6 +1724,19 @@ body[data-weather-theme="wind"] {
 		grid-template-columns: 1fr;
 	}
 
+	.air-forecast-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.air-timeline,
+	.astro-grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.life-grid.split-eight {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
 	.metric-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -1571,7 +1789,10 @@ body[data-weather-theme="wind"] {
 
 	.hero,
 	.air-panel,
+	.alert-panel,
+	.astronomy-panel,
 	.life-panel,
+	.minutely-panel,
 	.forecast-panel,
 	.daily-panel {
 		padding: 18px;
@@ -1587,9 +1808,24 @@ body[data-weather-theme="wind"] {
 	}
 
 	.metric-grid,
+	.astro-grid,
 	.life-grid.compact,
+	.compact-chips,
 	.daily-metrics {
 		grid-template-columns: 1fr;
+	}
+
+	.air-timeline {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.minute-bars {
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		row-gap: 10px;
+	}
+
+	.life-card {
+		min-height: 88px;
 	}
 
 	.hourly-grid {

@@ -64,6 +64,106 @@
 				</div>
 			</section>
 
+			{% if weather.alerts.active %}
+				<section class="panel alert-panel is-active">
+					<div class="section-heading">
+						<h2>天气预警</h2>
+						<span class="status-pill">{{ weather.alerts.summary }}</span>
+					</div>
+					<div class="alert-list">
+						{% for item in weather.alerts.list %}
+							<article class="alert-card">
+								<span class="weather-icon i-alert"></span>
+								<div>
+									<strong>{{ item.title }}</strong>
+									<span>{{ item.type }} · {{ item.severity }} · {{ item.time }}</span>
+									<small>{{ item.text }}</small>
+								</div>
+							</article>
+						{% endfor %}
+					</div>
+				</section>
+			{% endif %}
+
+			{% if weather.minutely.active %}
+				<section class="panel minutely-panel">
+					<div class="section-heading">
+						<h2>未来 2 小时降水</h2>
+						<span class="status-pill">{{ weather.minutely.summary }}</span>
+					</div>
+					<div class="minute-summary">
+						<span>累计 {{ weather.minutely.total }}</span>
+						<span>峰值 {{ weather.minutely.peak }}</span>
+					</div>
+					<div class="minute-bars" aria-label="未来两小时每 5 分钟降水">
+						{% for point in weather.minutely.points %}
+							<div class="minute-point{% if point.is_rain %} is-rain{% endif %}">
+								<span class="minute-bar" style="--minute-bar-height: {{ point.bar_height }}px;"></span>
+								<span>{{ point.time }}</span>
+							</div>
+						{% endfor %}
+					</div>
+				</section>
+			{% endif %}
+
+			<section class="panel air-panel detail-trigger" tabindex="0" role="button" aria-label="查看空气质量详情" data-modal-target="modal-air">
+				<div class="section-heading">
+					<h2>空气质量</h2>
+					<span class="quality-pill">{{ weather.air_quality.description }}</span>
+				</div>
+				<div class="air-summary">
+					<div class="aqi-score">
+						<div class="aqi-headline">
+							<span>AQI</span>
+							<span class="quality-pill">{{ weather.air_quality.standard }}</span>
+						</div>
+						<strong>{{ weather.air_quality.aqi_chn }}</strong>
+						<span>健康影响：{{ weather.air_quality.effect }}</span>
+					</div>
+					<div class="air-content">
+						<div class="air-guidance">
+							<span>活动建议</span>
+							<strong>{{ weather.air_quality.advice }}</strong>
+						</div>
+						<div class="chip-grid compact-chips">
+							{% for item in weather.air_quality.pollutants %}
+								<div class="data-chip">
+									<span class="weather-icon i-haze"></span>
+									<span>{{ item.label }}</span>
+									<strong>{{ item.value }}</strong>
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+				<div class="air-forecast-grid">
+					<div>
+						<h3>未来 8 小时 AQI</h3>
+						<div class="air-timeline">
+							{% for item in weather.air_quality.forecast.hourly %}
+								<div class="air-point">
+									<strong>{{ item.aqi }}</strong>
+									<span>{{ item.time }}</span>
+									<small>{{ item.category }} · {{ item.primary }}</small>
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+					<div>
+						<h3>未来 3 天</h3>
+						<div class="chip-grid compact-chips">
+							{% for item in weather.air_quality.forecast.daily %}
+								<div class="data-chip">
+									<span>{{ item.date }}</span>
+									<strong>{{ item.category }} · {{ item.aqi }}</strong>
+									<span>{{ item.primary }}</span>
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</section>
+
 			<section class="panel forecast-panel">
 				<div class="section-heading">
 					<h2>未来 24 小时</h2>
@@ -122,15 +222,31 @@
 				</div>
 			</section>
 
+			<section class="panel astronomy-panel">
+				<div class="section-heading">
+					<h2>日月信息</h2>
+				</div>
+				<div class="astro-grid">
+					{% for item in weather.astronomy.cards %}
+						<div class="data-chip">
+							<span class="weather-icon {{ item.icon }}"></span>
+							<span>{{ item.label }}</span>
+							<strong>{{ item.value }}</strong>
+						</div>
+					{% endfor %}
+				</div>
+			</section>
+
 			<section class="panel life-panel">
 				<div class="section-heading">
 					<h2>生活指数</h2>
 				</div>
-				<div class="life-grid compact">
+				<div class="life-grid compact{% if weather.life_index|length == 8 %} split-eight{% endif %}">
 					{% for item in weather.life_index %}
 						<article class="life-card">
 							<span>{{ item.label }}</span>
 							<strong>{{ item.desc }}</strong>
+							<small>{{ item.text }}</small>
 						</article>
 					{% endfor %}
 				</div>
@@ -161,6 +277,16 @@
 					<strong>{{ item.value }}</strong>
 				</div>
 			{% endfor %}
+			<div class="detail-item">
+				<span class="weather-icon i-rain"></span>
+				<span>分钟降水</span>
+				<strong>{{ weather.minutely.summary }}</strong>
+			</div>
+			<div class="detail-item">
+				<span class="weather-icon i-alert"></span>
+				<span>天气预警</span>
+				<strong>{{ weather.alerts.summary }}</strong>
+			</div>
 		</div>
 	</template>
 
@@ -178,11 +304,28 @@
 				<span>AQI</span>
 				<strong>{{ weather.air_quality.aqi_chn }}</strong>
 			</div>
+			<div class="detail-item">
+				<span class="weather-icon i-leaf"></span>
+				<span>健康影响</span>
+				<strong>{{ weather.air_quality.effect }}</strong>
+			</div>
+			<div class="detail-item">
+				<span class="weather-icon i-leaf"></span>
+				<span>活动建议</span>
+				<strong>{{ weather.air_quality.advice }}</strong>
+			</div>
 			{% for item in weather.air_quality.pollutants %}
 				<div class="detail-item">
 					<span class="weather-icon i-haze"></span>
-					<span>{{ item.label }}</span>
+					<span>{{ item.full_name }}</span>
 					<strong>{{ item.value }}</strong>
+				</div>
+			{% endfor %}
+			{% for item in weather.air_quality.forecast.daily %}
+				<div class="detail-item">
+					<span class="weather-icon i-leaf"></span>
+					<span>{{ item.date }} 空气</span>
+					<strong>{{ item.category }} · AQI {{ item.aqi }}</strong>
 				</div>
 			{% endfor %}
 		</div>

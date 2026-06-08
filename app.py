@@ -103,12 +103,14 @@ QWEATHER_LIFE_TYPES = {
 }
 
 QWEATHER_HOME_LIFE_TYPES = ("1", "2", "3", "5", "6", "8", "9", "10")
-QWEATHER_HOME_POLLUTANTS = ("pm2p5", "pm10", "o3", "no2")
+QWEATHER_HOME_POLLUTANTS = ("pm2p5", "pm10", "o3", "no2", "so2", "co")
 QWEATHER_POLLUTANT_LABELS = {
 	"pm2p5": "PM2.5",
 	"pm10": "PM10",
 	"o3": "O3",
 	"no2": "NO2",
+	"so2": "SO2",
+	"co": "CO",
 }
 
 QWEATHER_API_NOTES = {
@@ -131,6 +133,13 @@ QWEATHER_API_NOTES = {
 		"weather_daily": "/v7/weather/7d",
 		"indices": "/v7/indices/1d",
 		"air_current": "/airquality/v1/current/{latitude}/{longitude}",
+		"air_hourly": "/airquality/v1/hourly/{latitude}/{longitude}",
+		"air_daily": "/airquality/v1/daily/{latitude}/{longitude}",
+		"minutely": "/v7/minutely/5m",
+		"weather_alert": "/weatheralert/v1/current/{latitude}/{longitude}",
+		"astronomy_sun": "/v7/astronomy/sun",
+		"astronomy_moon": "/v7/astronomy/moon",
+		"solar_angle": "/v7/astronomy/solar-elevation-angle",
 	},
 }
 
@@ -286,6 +295,9 @@ def fetch_qweather_payload(location: dict[str, str]) -> dict[str, Any]:
 	weather_params = {"location": location_id, "lang": QWEATHER_LANGUAGE}
 	air_latitude = f"{float(resolved_location['lat']):.2f}"
 	air_longitude = f"{float(resolved_location['lon']):.2f}"
+	weather_coord = f"{air_longitude},{air_latitude}"
+	today = datetime.now(timezone(timedelta(hours=8)))
+	astronomy_date = today.strftime("%Y%m%d")
 	return {
 		"provider": "QWeather",
 		"api_enabled": True,
@@ -298,10 +310,33 @@ def fetch_qweather_payload(location: dict[str, str]) -> dict[str, Any]:
 		"weather_hourly": qweather_get(config, "/v7/weather/24h", weather_params),
 		"weather_daily": qweather_get(config, "/v7/weather/7d", weather_params),
 		"indices_1d": qweather_get(config, "/v7/indices/1d", {"type": indices_types, **weather_params}),
+		"minutely": qweather_get(config, "/v7/minutely/5m", {"location": weather_coord, "lang": QWEATHER_LANGUAGE}),
+		"weather_alert": qweather_get(
+			config,
+			f"/weatheralert/v1/current/{air_latitude}/{air_longitude}",
+			{"lang": QWEATHER_LANGUAGE, "localTime": "true"},
+		),
 		"air_current": qweather_get(
 			config,
 			f"/airquality/v1/current/{air_latitude}/{air_longitude}",
 			{"lang": QWEATHER_LANGUAGE},
+		),
+		"air_hourly": qweather_get(
+			config,
+			f"/airquality/v1/hourly/{air_latitude}/{air_longitude}",
+			{"lang": QWEATHER_LANGUAGE, "localTime": "true"},
+		),
+		"air_daily": qweather_get(
+			config,
+			f"/airquality/v1/daily/{air_latitude}/{air_longitude}",
+			{"lang": QWEATHER_LANGUAGE, "localTime": "true"},
+		),
+		"astronomy_sun": qweather_get(config, "/v7/astronomy/sun", {"location": location_id, "date": astronomy_date}),
+		"astronomy_moon": qweather_get(config, "/v7/astronomy/moon", {"location": location_id, "date": astronomy_date, "lang": QWEATHER_LANGUAGE}),
+		"solar_angle": qweather_get(
+			config,
+			"/v7/astronomy/solar-elevation-angle",
+			{"location": weather_coord, "date": astronomy_date, "time": today.strftime("%H%M"), "tz": "0800", "alt": "0"},
 		),
 	}
 
@@ -377,6 +412,18 @@ def format_time(value: str) -> str:
 def format_qweather_date(value: str) -> str:
 	parsed = datetime.fromisoformat(value)
 	return f"{parsed.month}月{parsed.day}日 {WEEKDAYS[parsed.weekday()]}"
+
+
+def format_month_day(value: str) -> str:
+	parsed = datetime.fromisoformat(value)
+	return f"{parsed.month}/{parsed.day}"
+
+
+def format_iso_time(value: str) -> str:
+	try:
+		return datetime.fromisoformat(value).strftime("%H:%M")
+	except ValueError:
+		return value or "暂无"
 
 
 def qweather_icon(icon: Any, text: str = "") -> str:
@@ -460,6 +507,13 @@ def qweather_percent(value: Any) -> str:
 	return f"{number}%" if number != "暂无" else number
 
 
+def qweather_metric(value: Any, unit: str, digits: int = 0) -> str:
+	number = format_number(value, digits)
+	if unit == "°":
+		return f"{number}°" if number != "暂无" else number
+	return f"{number} {unit}" if number != "暂无" else number
+
+
 def qweather_air_index(air_current: dict[str, Any]) -> dict[str, Any]:
 	indexes = air_current.get("indexes", [])
 	for item in indexes:
@@ -476,11 +530,125 @@ def qweather_pollutants(air_current: dict[str, Any]) -> list[dict[str, Any]]:
 		if not pollutant:
 			continue
 		concentration = pollutant.get("concentration", {})
+		unit = concentration.get("unit", "μg/m³")
 		items.append({
 			"label": QWEATHER_POLLUTANT_LABELS.get(code, pollutant.get("name", "暂无")),
-			"value": format_number(concentration.get("value"), 0),
+			"value": qweather_metric(concentration.get("value"), unit, 1 if code == "co" else 0),
+			"full_name": pollutant.get("fullName", pollutant.get("name", "")),
 		})
 	return items
+
+
+def qweather_primary_pollutant(index: dict[str, Any]) -> str:
+	pollutant = index.get("primaryPollutant")
+	if not pollutant:
+		return "无首要污染物"
+	return pollutant.get("name") or pollutant.get("fullName") or "暂无"
+
+
+def qweather_aqi_index(item: dict[str, Any]) -> dict[str, Any]:
+	indexes = item.get("indexes", [])
+	for index in indexes:
+		if index.get("code") == "cn-mee":
+			return index
+	return indexes[0] if indexes else {}
+
+
+def build_minutely(minutely: dict[str, Any]) -> dict[str, Any]:
+	points = []
+	values = []
+	for item in minutely.get("minutely", [])[:24]:
+		value = numeric_value(item.get("precip")) or 0
+		values.append(value)
+		points.append({
+			"time": format_iso_time(item.get("fxTime", "")),
+			"value": format_number(value),
+			"type": item.get("type", "rain"),
+			"is_rain": value > 0,
+		})
+	max_value = max(values, default=0)
+	for point, value in zip(points, values, strict=False):
+		point["bar_height"] = chart_coord(max(6, (value / max_value * 48) if max_value else 6))
+	return {
+		"active": any(value > 0 for value in values),
+		"summary": minutely.get("summary", "暂无分钟级降水数据"),
+		"points": points,
+		"total": qweather_metric(sum(values), "mm", 1),
+		"peak": qweather_metric(max_value, "mm", 1),
+	}
+
+
+def build_weather_alerts(weather_alert: dict[str, Any]) -> dict[str, Any]:
+	alerts = weather_alert.get("alerts", [])
+	items = []
+	for alert in alerts[:3]:
+		event_type = alert.get("eventType") or {}
+		color = alert.get("color") or {}
+		title = alert.get("headline") or "天气预警"
+		severity = color.get("code") or alert.get("severity") or "关注"
+		items.append({
+			"title": title,
+			"type": event_type.get("name") or "天气",
+			"severity": severity,
+			"time": format_iso_time(alert.get("effectiveTime") or alert.get("issuedTime") or ""),
+			"text": alert.get("description") or alert.get("instruction") or "",
+		})
+	attributions = weather_alert.get("metadata", {}).get("attributions", [])
+	return {
+		"active": bool(items),
+		"count": len(alerts),
+		"summary": f"当前有 {len(alerts)} 条天气预警" if alerts else "当前暂无天气预警",
+		"list": items,
+		"attributions": attributions,
+	}
+
+
+def build_air_forecast(air_hourly: dict[str, Any], air_daily: dict[str, Any]) -> dict[str, Any]:
+	hourly_items = []
+	for item in air_hourly.get("hours", [])[:8]:
+		index = qweather_aqi_index(item)
+		if not index:
+			continue
+		hourly_items.append({
+			"time": format_iso_time(item.get("forecastTime", "")),
+			"aqi": index.get("aqiDisplay", index.get("aqi", "暂无")),
+			"category": index.get("category", "暂无"),
+			"primary": qweather_primary_pollutant(index),
+		})
+
+	daily_items = []
+	for item in air_daily.get("days", [])[:3]:
+		index = qweather_aqi_index(item)
+		if not index:
+			continue
+		daily_items.append({
+			"date": format_month_day(item.get("forecastStartTime", "")),
+			"aqi": index.get("aqiDisplay", index.get("aqi", "暂无")),
+			"category": index.get("category", "暂无"),
+			"primary": qweather_primary_pollutant(index),
+		})
+
+	return {
+		"hourly": hourly_items,
+		"daily": daily_items,
+	}
+
+
+def build_astronomy(sun: dict[str, Any], moon: dict[str, Any], solar_angle: dict[str, Any]) -> dict[str, Any]:
+	moon_phases = moon.get("moonPhase", [])
+	current_phase = moon_phases[0] if moon_phases else {}
+	return {
+		"cards": [
+			{"label": "日出", "value": format_iso_time(sun.get("sunrise", "")), "icon": "i-sun"},
+			{"label": "日落", "value": format_iso_time(sun.get("sunset", "")), "icon": "i-moon"},
+			{"label": "月出", "value": format_iso_time(moon.get("moonrise", "")), "icon": "i-moon"},
+			{"label": "月落", "value": format_iso_time(moon.get("moonset", "")), "icon": "i-moon"},
+			{"label": "月相", "value": current_phase.get("name", "暂无"), "icon": "i-moon"},
+			{"label": "月亮照明", "value": qweather_percent(current_phase.get("illumination")), "icon": "i-moon"},
+			{"label": "太阳高度", "value": qweather_metric(solar_angle.get("solarElevationAngle"), "°", 1), "icon": "i-sun"},
+			{"label": "太阳方位", "value": qweather_metric(solar_angle.get("solarAzimuthAngle"), "°", 1), "icon": "i-gauge"},
+		],
+	}
 
 
 def build_qweather_life_index(indices: dict[str, Any]) -> list[dict[str, Any]]:
@@ -502,7 +670,6 @@ def build_qweather_hourly(hourly: dict[str, Any]) -> list[dict[str, Any]]:
 	items: list[dict[str, Any]] = []
 	for entry in hourly.get("hourly", []):
 		temperature_value = numeric_value(entry.get("temp"))
-		probability_value = numeric_value(entry.get("pop")) or 0
 		temperature = f"{format_number(entry.get('temp'), 0)}°C"
 		precipitation = f"{format_number(entry.get('precip'))} mm"
 		items.append({
@@ -515,7 +682,6 @@ def build_qweather_hourly(hourly: dict[str, Any]) -> list[dict[str, Any]]:
 			"apparent_temperature": temperature,
 			"precipitation": precipitation,
 			"probability": qweather_percent(entry.get("pop")),
-			"probability_value": max(0, min(100, round(probability_value))),
 			"wind": qweather_wind(entry),
 			"humidity": qweather_percent(entry.get("humidity")),
 			"cloudrate": qweather_percent(entry.get("cloud")),
@@ -655,6 +821,10 @@ def load_weather(location_id: str | None = None) -> dict[str, Any]:
 	air_index = qweather_air_index(payload["air_current"])
 	pollutants = qweather_pollutants(payload["air_current"])
 	hourly_items = build_qweather_hourly(hourly)
+	minutely = build_minutely(payload.get("minutely", {}))
+	alerts = build_weather_alerts(payload.get("weather_alert", {}))
+	air_forecast = build_air_forecast(payload.get("air_hourly", {}), payload.get("air_daily", {}))
+	astronomy = build_astronomy(payload.get("astronomy_sun", {}), payload.get("astronomy_moon", {}), payload.get("solar_angle", {}))
 	latitude = location["lat"]
 	longitude = location["lon"]
 	coordinates = f"{latitude}, {longitude}"
@@ -690,7 +860,7 @@ def load_weather(location_id: str | None = None) -> dict[str, Any]:
 			"wind": qweather_wind(now),
 			"precipitation": f"{format_number(now.get('precip'))} mm",
 			"precipitation_source": "和风天气",
-			"nearest_precipitation": "待接入分钟级降水",
+			"nearest_precipitation": minutely["summary"],
 			"air_quality": air_index.get("category", "暂无"),
 			"details": [
 				{"label": "体感", "value": f"{format_number(now.get('feelsLike'), 0)}°C", "icon": "i-thermometer"},
@@ -715,8 +885,16 @@ def load_weather(location_id: str | None = None) -> dict[str, Any]:
 		"air_quality": {
 			"description": air_index.get("category", "暂无"),
 			"aqi_chn": air_index.get("aqiDisplay", air_index.get("aqi", "暂无")),
+			"standard": air_index.get("name", "暂无"),
+			"level": air_index.get("level", "暂无"),
+			"effect": air_index.get("health", {}).get("effect", ""),
+			"advice": air_index.get("health", {}).get("advice", {}).get("generalPopulation", ""),
 			"pollutants": pollutants,
+			"forecast": air_forecast,
 		},
+		"minutely": minutely,
+		"alerts": alerts,
+		"astronomy": astronomy,
 		"life_index": life_index,
 		"hourly": hourly_items,
 		"hourly_chart": build_hourly_chart(hourly_items),
