@@ -18,18 +18,16 @@ function saveLocation(position) {
 		elements.locationInfo.classList.add("is-located");
 		elements.locationInfo.dataset.browserLatitude = String(coordinates.latitude);
 		elements.locationInfo.dataset.browserLongitude = String(coordinates.longitude);
-		elements.locationInfo.title = `已定位：${coordinates.latitude}, ${coordinates.longitude}`;
 	}
 	elements.locateButton?.removeAttribute("aria-busy");
 
 	return coordinates;
 }
 
-function handleLocationError(error) {
+function handleLocationError() {
 	if (elements.locationInfo) {
 		elements.locationInfo.classList.remove("is-locating", "is-located");
 		elements.locationInfo.classList.add("is-location-denied");
-		elements.locationInfo.title = error?.message ? `定位未启用：${error.message}` : "定位未启用";
 	}
 	elements.locateButton?.removeAttribute("aria-busy");
 	fallbackToStoredLocation();
@@ -57,9 +55,8 @@ async function resolveBrowserLocation(position) {
 			return;
 		}
 	} catch {
-		if (elements.locationInfo) {
-			elements.locationInfo.title = "已定位，城市解析失败";
-		}
+		fallbackToStoredLocation();
+		return;
 	}
 
 	fallbackToStoredLocation();
@@ -96,7 +93,6 @@ function initLocationStatus() {
 		elements.locationInfo.classList.add("is-located");
 		elements.locationInfo.dataset.browserLatitude = String(stored.latitude);
 		elements.locationInfo.dataset.browserLongitude = String(stored.longitude);
-		elements.locationInfo.title = `已定位：${stored.latitude}, ${stored.longitude}`;
 		return;
 	}
 
@@ -108,4 +104,3 @@ export function initGeolocation() {
 	requestBrowserLocationWithOptions();
 	elements.locateButton?.addEventListener("click", () => requestBrowserLocationWithOptions({force: true}));
 }
-

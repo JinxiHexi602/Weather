@@ -1,7 +1,4 @@
 export const elements = {
-	backdrop: document.querySelector("#modal-backdrop"),
-	modalContent: document.querySelector("#modal-content"),
-	closeButton: document.querySelector(".modal-close"),
 	locationInfo: document.querySelector("#location-info"),
 	updateInfo: document.querySelector("#update-info"),
 	updateTime: document.querySelector("#update-time"),
@@ -12,5 +9,13 @@ export const elements = {
 	cityLocation: document.querySelector("#city-location"),
 	cityResults: document.querySelector("#city-results"),
 	locateButton: document.querySelector("#locate-button"),
+	detailModal: document.querySelector("#detail-modal"),
+	detailModalClose: document.querySelector("#detail-modal-close"),
+	detailModalContent: document.querySelector("#detail-modal-content"),
+	lifeModal: document.querySelector("#life-modal"),
+	lifeModalClose: document.querySelector("#life-modal-close"),
+	lifeModalIcon: document.querySelector("#life-modal-icon"),
+	lifeModalLabel: document.querySelector("#life-modal-label"),
+	lifeModalTitle: document.querySelector("#life-modal-title"),
+	lifeModalText: document.querySelector("#life-modal-text"),
 };
-

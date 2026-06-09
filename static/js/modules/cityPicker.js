@@ -5,6 +5,7 @@ import {saveSelectedCity} from "./storage.js";
 
 let citySearchTimer = null;
 let cityPickerTimer = null;
+let cityFocusTimer = null;
 let activeCityResults = [];
 
 function cityLabel(city) {
@@ -28,14 +29,15 @@ function openCityPicker() {
 	}
 
 	window.clearTimeout(cityPickerTimer);
+	window.clearTimeout(cityFocusTimer);
 	elements.citySearch.disabled = false;
 	elements.citySearch.tabIndex = 0;
 	elements.cityPicker.classList.add("is-editing");
 	elements.cityDisplay.setAttribute("aria-expanded", "true");
-	window.requestAnimationFrame(() => {
+	cityFocusTimer = window.setTimeout(() => {
 		elements.citySearch.focus();
 		elements.citySearch.select();
-	});
+	}, 230);
 }
 
 function closeCityPicker() {
@@ -45,6 +47,7 @@ function closeCityPicker() {
 
 	elements.cityPicker.classList.remove("is-editing");
 	elements.cityDisplay.setAttribute("aria-expanded", "false");
+	window.clearTimeout(cityFocusTimer);
 	if (elements.cityDisplay.textContent && elements.citySearch.value.trim() !== elements.cityDisplay.textContent.trim()) {
 		elements.citySearch.value = elements.cityDisplay.textContent.trim();
 	}
@@ -178,4 +181,3 @@ export function initCityPicker() {
 	});
 	return false;
 }
-

@@ -7,12 +7,17 @@
 	<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body data-weather-theme="{{ weather.background_theme }}">
+	<div class="weather-scene" aria-hidden="true">
+		<span class="weather-scene__layer weather-scene__layer-a"></span>
+		<span class="weather-scene__layer weather-scene__layer-b"></span>
+		<span class="weather-scene__layer weather-scene__layer-c"></span>
+	</div>
 	<div class="ambient ambient-one"></div>
 	<div class="ambient ambient-two"></div>
 
 	<div class="app-shell">
-		<header class="topbar">
-			<div class="top-info location-info" id="location-info" data-location-id="{{ weather.location.id }}" data-location-name="{{ weather.place }}" data-latitude="{{ weather.location.lat }}" data-longitude="{{ weather.location.lon }}">
+		<header class="topbar command-bar">
+			<div class="top-info command-group location-info" id="location-info" data-location-id="{{ weather.location.id }}" data-location-name="{{ weather.place }}" data-latitude="{{ weather.location.lat }}" data-longitude="{{ weather.location.lon }}">
 				<button class="info-label icon-label location-button" id="locate-button" type="button" aria-label="重新定位" title="重新定位">
 					<span class="location-icon" aria-hidden="true"></span>
 				</button>
@@ -24,19 +29,18 @@
 					<div class="city-results" id="city-results" role="listbox" hidden></div>
 				</form>
 			</div>
-			<div class="top-info align-end update-info" id="update-info">
+			<div class="top-info command-group align-end update-info" id="update-info">
 				<div class="update-copy" aria-live="polite">
 					<strong id="update-time" data-updated-at="{{ weather.updated_at_iso }}">{{ weather.updated_at }}</strong>
 				</div>
 				<button class="refresh-button" id="refresh-weather" type="button" aria-label="刷新天气">
 					<span class="refresh-icon" aria-hidden="true"></span>
-					<span>刷新</span>
 				</button>
 			</div>
 		</header>
 
 		<main class="content-grid">
-			<section class="hero panel detail-trigger" tabindex="0" role="button" aria-label="查看实时天气详情" data-modal-target="modal-now">
+			<section class="hero panel detail-trigger" tabindex="0" role="button" aria-label="查看实时天气详情" data-detail-modal="detail-now">
 				<div class="hero-main">
 					<div class="section-heading hero-heading">
 						<h2>实时天气</h2>
@@ -106,74 +110,16 @@
 				</section>
 			{% endif %}
 
-			<section class="panel air-panel detail-trigger" tabindex="0" role="button" aria-label="查看空气质量详情" data-modal-target="modal-air">
-				<div class="section-heading">
-					<h2>空气质量</h2>
-					<span class="quality-pill">{{ weather.air_quality.description }}</span>
-				</div>
-				<div class="air-summary">
-					<div class="aqi-score">
-						<div class="aqi-headline">
-							<span>AQI</span>
-							<span class="quality-pill">{{ weather.air_quality.standard }}</span>
-						</div>
-						<strong>{{ weather.air_quality.aqi_chn }}</strong>
-						<span>健康影响：{{ weather.air_quality.effect }}</span>
-					</div>
-					<div class="air-content">
-						<div class="air-guidance">
-							<span>活动建议</span>
-							<strong>{{ weather.air_quality.advice }}</strong>
-						</div>
-						<div class="chip-grid compact-chips">
-							{% for item in weather.air_quality.pollutants %}
-								<div class="data-chip">
-									<span class="weather-icon i-haze"></span>
-									<span>{{ item.label }}</span>
-									<strong>{{ item.value }}</strong>
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-				</div>
-				<div class="air-forecast-grid">
-					<div>
-						<h3>未来 8 小时 AQI</h3>
-						<div class="air-timeline">
-							{% for item in weather.air_quality.forecast.hourly %}
-								<div class="air-point">
-									<strong>{{ item.aqi }}</strong>
-									<span>{{ item.time }}</span>
-									<small>{{ item.category }} · {{ item.primary }}</small>
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-					<div>
-						<h3>未来 3 天</h3>
-						<div class="chip-grid compact-chips">
-							{% for item in weather.air_quality.forecast.daily %}
-								<div class="data-chip">
-									<span>{{ item.date }}</span>
-									<strong>{{ item.category }} · {{ item.aqi }}</strong>
-									<span>{{ item.primary }}</span>
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-				</div>
-			</section>
-
 			<section class="panel forecast-panel">
 				<div class="section-heading">
 					<h2>未来 24 小时</h2>
 				</div>
 				<div class="hourly-chart simplified">
-					<div class="hourly-chart-frame" role="img" aria-labelledby="hourly-chart-title">
+					<div class="hourly-chart-frame" aria-labelledby="hourly-chart-title">
 						<span id="hourly-chart-title" class="sr-only">未来 24 小时温度柱状图和降水概率</span>
 						<div class="hourly-bars">
 							{% for point in weather.hourly_chart.points %}
-								<button class="hour-column detail-trigger" type="button" aria-label="查看 {{ point.time }} 天气详情，{{ point.temperature }}°C，{{ point.sky }}，降水概率 {{ point.probability }}" data-modal-target="modal-hour-{{ point.index }}" style="--bar-height: {{ point.bar_height_px }}px;">
+								<button class="hour-column detail-trigger" type="button" aria-label="查看 {{ point.time }} 天气详情，{{ point.temperature }}°C，{{ point.sky }}，降水概率 {{ point.probability }}" data-detail-modal="detail-hour-{{ point.index }}" style="--bar-height: {{ point.bar_height_px }}px;">
 									<span class="chart-bar-stack">
 										<span class="chart-temp-label">{{ point.temperature }}°</span>
 										<span class="chart-temp-bar" aria-hidden="true"></span>
@@ -196,7 +142,7 @@
 				</div>
 				<div class="daily-stack">
 					{% for day in weather.daily %}
-						<article class="day-card detail-trigger" tabindex="0" role="button" aria-label="查看 {{ day.date }} 天气详情" data-modal-target="modal-day-{{ loop.index0 }}">
+						<article class="day-card detail-trigger" tabindex="0" role="button" aria-label="查看 {{ day.date }} 天气详情" data-detail-modal="detail-day-{{ loop.index0 }}">
 							<div class="day-main">
 								<span class="weather-icon {{ day.icon }}"></span>
 								<div>
@@ -222,50 +168,59 @@
 				</div>
 			</section>
 
-			<section class="panel astronomy-panel">
-				<div class="section-heading">
-					<h2>日月信息</h2>
-				</div>
-				<div class="astro-grid">
-					{% for item in weather.astronomy.cards %}
-						<div class="data-chip">
-							<span class="weather-icon {{ item.icon }}"></span>
-							<span>{{ item.label }}</span>
-							<strong>{{ item.value }}</strong>
-						</div>
-					{% endfor %}
-				</div>
-			</section>
-
 			<section class="panel life-panel">
 				<div class="section-heading">
 					<h2>生活指数</h2>
 				</div>
-				<div class="life-grid compact{% if weather.life_index|length == 8 %} split-eight{% endif %}">
+				<div class="life-grid compact">
 					{% for item in weather.life_index %}
-						<article class="life-card">
-							<span>{{ item.label }}</span>
-							<strong>{{ item.desc }}</strong>
-							<small>{{ item.text }}</small>
-						</article>
+						<button class="life-card life-tone-{{ item.tone }}" type="button" data-life-label="{{ item.label }}" data-life-desc="{{ item.desc }}" data-life-text="{{ item.text }}" data-life-icon="{{ item.icon }}" data-life-tone="{{ item.tone }}" aria-haspopup="dialog">
+							<span class="life-icon-wrap">
+								<span class="weather-icon {{ item.icon }}" aria-hidden="true"></span>
+							</span>
+							<span class="life-card-copy">
+								<span class="life-label">{{ item.label }}</span>
+								<strong>{{ item.desc }}</strong>
+							</span>
+						</button>
 					{% endfor %}
 				</div>
 			</section>
 		</main>
 	</div>
 
-	<div class="modal-backdrop" id="modal-backdrop" hidden>
-		<div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-			<button class="modal-close" type="button" aria-label="关闭"></button>
-			<div id="modal-content"></div>
+	<div class="detail-modal-backdrop" id="detail-modal" hidden>
+		<div class="detail-modal-panel" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+			<button class="detail-modal-close" id="detail-modal-close" type="button" aria-label="关闭"></button>
+			<div id="detail-modal-content"></div>
 		</div>
 	</div>
 
-	<template id="modal-now">
-		<header class="modal-header">
+	<div class="life-modal-backdrop" id="life-modal" hidden>
+		<div class="life-modal-panel" role="dialog" aria-modal="true" aria-labelledby="life-modal-title">
+			<button class="life-modal-close" id="life-modal-close" type="button" aria-label="关闭"></button>
+			<div class="life-modal-header">
+				<span class="life-modal-icon-wrap">
+					<span class="weather-icon" id="life-modal-icon" aria-hidden="true"></span>
+				</span>
+				<div>
+					<h3 id="life-modal-title"></h3>
+					<p id="life-modal-label"></p>
+				</div>
+			</div>
+			<div class="detail-grid life-modal-grid">
+				<div class="detail-item detail-item-wide life-modal-description">
+					<p id="life-modal-text"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<template id="detail-now">
+		<header class="detail-modal-header">
 			<span class="weather-icon {{ weather.now.icon }}"></span>
 			<div>
-				<h3>实时天气</h3>
+				<h3 id="detail-modal-title">实时天气</h3>
 				<p>{{ weather.now.sky }} · {{ weather.now.temperature }}°C</p>
 			</div>
 		</header>
@@ -277,70 +232,24 @@
 					<strong>{{ item.value }}</strong>
 				</div>
 			{% endfor %}
-			<div class="detail-item">
-				<span class="weather-icon i-rain"></span>
-				<span>分钟降水</span>
-				<strong>{{ weather.minutely.summary }}</strong>
-			</div>
-			<div class="detail-item">
-				<span class="weather-icon i-alert"></span>
-				<span>天气预警</span>
-				<strong>{{ weather.alerts.summary }}</strong>
-			</div>
-		</div>
-	</template>
-
-	<template id="modal-air">
-		<header class="modal-header">
-			<span class="weather-icon i-leaf"></span>
-			<div>
-				<h3>空气质量</h3>
-				<p>{{ weather.air_quality.description }} · AQI {{ weather.air_quality.aqi_chn }}</p>
-			</div>
-		</header>
-		<div class="detail-grid">
-			<div class="detail-item">
-				<span class="weather-icon i-leaf"></span>
-				<span>AQI</span>
-				<strong>{{ weather.air_quality.aqi_chn }}</strong>
-			</div>
-			<div class="detail-item">
-				<span class="weather-icon i-leaf"></span>
-				<span>健康影响</span>
-				<strong>{{ weather.air_quality.effect }}</strong>
-			</div>
-			<div class="detail-item">
-				<span class="weather-icon i-leaf"></span>
-				<span>活动建议</span>
-				<strong>{{ weather.air_quality.advice }}</strong>
-			</div>
-			{% for item in weather.air_quality.pollutants %}
-				<div class="detail-item">
-					<span class="weather-icon i-haze"></span>
-					<span>{{ item.full_name }}</span>
-					<strong>{{ item.value }}</strong>
-				</div>
-			{% endfor %}
-			{% for item in weather.air_quality.forecast.daily %}
-				<div class="detail-item">
-					<span class="weather-icon i-leaf"></span>
-					<span>{{ item.date }} 空气</span>
-					<strong>{{ item.category }} · AQI {{ item.aqi }}</strong>
-				</div>
-			{% endfor %}
 		</div>
 	</template>
 
 	{% for item in weather.hourly[:24] %}
-		<template id="modal-hour-{{ loop.index0 }}">
-			<header class="modal-header">
+		<template id="detail-hour-{{ loop.index0 }}">
+			<header class="detail-modal-header">
 				<span class="weather-icon {{ item.icon }}"></span>
 				<div>
-					<h3>{{ item.datetime }}</h3>
-					<p>{{ item.sky }} · {{ item.temperature }}</p>
+					<h3 id="detail-modal-title">{{ item.datetime }}</h3>
+					<p>{{ item.sky }} · {{ item.temperature }} · AQI {{ weather.air_quality.aqi }}</p>
 				</div>
 			</header>
 			<div class="detail-grid">
+				<div class="detail-item">
+					<span class="weather-icon i-leaf"></span>
+					<span>AQI</span>
+					<strong>{{ weather.air_quality.aqi }}</strong>
+				</div>
 				{% for detail in item.details %}
 					<div class="detail-item">
 						<span class="weather-icon {{ detail.icon }}"></span>
@@ -353,15 +262,20 @@
 	{% endfor %}
 
 	{% for day in weather.daily %}
-		<template id="modal-day-{{ loop.index0 }}">
-			<header class="modal-header">
+		<template id="detail-day-{{ loop.index0 }}">
+			<header class="detail-modal-header">
 				<span class="weather-icon {{ day.icon }}"></span>
 				<div>
-					<h3>{{ day.date }}</h3>
-					<p>{{ day.sky }} · {{ day.temperature }}</p>
+					<h3 id="detail-modal-title">{{ day.date }}</h3>
+					<p>{{ day.sky }} · {{ day.temperature }} · AQI {{ weather.air_quality.aqi }}</p>
 				</div>
 			</header>
 			<div class="detail-grid">
+				<div class="detail-item">
+					<span class="weather-icon i-leaf"></span>
+					<span>AQI</span>
+					<strong>{{ weather.air_quality.aqi }}</strong>
+				</div>
 				{% for detail in day.details %}
 					<div class="detail-item">
 						<span class="weather-icon {{ detail.icon }}"></span>

@@ -53,6 +53,8 @@ def qweather_background_theme(icon: Any, text: str = "") -> str:
 	icon_text = str(icon or "")
 	weather_text = str(text or "")
 
+	if icon_text in ("302", "303", "304", "313") or any(keyword in weather_text for keyword in ("\u96f7", "\u51b0\u96f9")):
+		return "storm"
 	if icon_text.startswith("4") or "\u96ea" in weather_text:
 		return "snow"
 	if icon_text.startswith("3") or any(keyword in weather_text for keyword in ("\u96e8", "\u96f7")):

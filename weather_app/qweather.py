@@ -170,11 +170,9 @@ def fetch_qweather_payload(location: dict[str, str]) -> dict[str, Any]:
 	location_id = resolved_location["key"]
 	indices_types = ",".join(QWEATHER_HOME_LIFE_TYPES)
 	weather_params = {"location": location_id, "lang": QWEATHER_LANGUAGE}
-	air_latitude = f"{float(resolved_location['lat']):.2f}"
-	air_longitude = f"{float(resolved_location['lon']):.2f}"
-	weather_coord = f"{air_longitude},{air_latitude}"
-	today = datetime.now(timezone(timedelta(hours=8)))
-	astronomy_date = today.strftime("%Y%m%d")
+	api_latitude = f"{float(resolved_location['lat']):.2f}"
+	api_longitude = f"{float(resolved_location['lon']):.2f}"
+	weather_coord = f"{api_longitude},{api_latitude}"
 	return {
 		"provider": "QWeather",
 		"api_enabled": True,
@@ -188,30 +186,13 @@ def fetch_qweather_payload(location: dict[str, str]) -> dict[str, Any]:
 		"minutely": qweather_get(config, "/v7/minutely/5m", {"location": weather_coord, "lang": QWEATHER_LANGUAGE}),
 		"weather_alert": qweather_get(
 			config,
-			f"/weatheralert/v1/current/{air_latitude}/{air_longitude}",
+			f"/weatheralert/v1/current/{api_latitude}/{api_longitude}",
 			{"lang": QWEATHER_LANGUAGE, "localTime": "true"},
 		),
 		"air_current": qweather_get(
 			config,
-			f"/airquality/v1/current/{air_latitude}/{air_longitude}",
+			f"/airquality/v1/current/{api_latitude}/{api_longitude}",
 			{"lang": QWEATHER_LANGUAGE},
-		),
-		"air_hourly": qweather_get(
-			config,
-			f"/airquality/v1/hourly/{air_latitude}/{air_longitude}",
-			{"lang": QWEATHER_LANGUAGE, "localTime": "true"},
-		),
-		"air_daily": qweather_get(
-			config,
-			f"/airquality/v1/daily/{air_latitude}/{air_longitude}",
-			{"lang": QWEATHER_LANGUAGE, "localTime": "true"},
-		),
-		"astronomy_sun": qweather_get(config, "/v7/astronomy/sun", {"location": location_id, "date": astronomy_date}),
-		"astronomy_moon": qweather_get(config, "/v7/astronomy/moon", {"location": location_id, "date": astronomy_date, "lang": QWEATHER_LANGUAGE}),
-		"solar_angle": qweather_get(
-			config,
-			"/v7/astronomy/solar-elevation-angle",
-			{"location": weather_coord, "date": astronomy_date, "time": today.strftime("%H%M"), "tz": "0800", "alt": "0"},
 		),
 	}
 

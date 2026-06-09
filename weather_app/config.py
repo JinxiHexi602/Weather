@@ -91,6 +91,17 @@ QWEATHER_LIFE_TYPES = {
 	"10": "空气扩散",
 }
 
+QWEATHER_LIFE_ICONS = {
+	"1": "i-life-sport",
+	"2": "i-life-car",
+	"3": "i-life-shirt",
+	"5": "i-life-uv",
+	"6": "i-life-travel",
+	"8": "i-life-comfort",
+	"9": "i-life-health",
+	"10": "i-wind",
+}
+
 QWEATHER_HOME_LIFE_TYPES = ("1", "2", "3", "5", "6", "8", "9", "10")
 QWEATHER_HOME_POLLUTANTS = ("pm2p5", "pm10", "o3", "no2", "so2", "co")
 QWEATHER_POLLUTANT_LABELS = {

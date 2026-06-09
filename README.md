@@ -1,11 +1,11 @@
 # Weather
 
-Flask weather dashboard using QWeather APIs. The app renders a Chinese weather UI with current conditions, a 24-hour forecast, a 7-day forecast, air quality, life indices, browser geolocation, and GeoAPI city search.
+Flask weather dashboard using QWeather APIs. The app renders a Chinese weather UI with current conditions, weather alerts, minutely precipitation, a 24-hour forecast, a 7-day forecast, life indices, browser geolocation, and GeoAPI city search.
 
 ## Tech Stack
 
 - Python 3 + Flask
-- QWeather GeoAPI, Weather API, Indices API, and Air Quality API
+- QWeather GeoAPI, Weather API, Warning API, Minutely API, and Indices API
 - Ed25519 JWT authentication via `cryptography`
 - Vanilla HTML/CSS/JavaScript
 
@@ -24,7 +24,8 @@ templates/index.html      Main Jinja template
 static/css/style.css      UI styling and responsive layout
 static/js/app.js          ES module bootstrap
 static/js/modules/        Frontend modules for API calls, city search, geolocation,
-                          refresh handling, modal behavior, navigation, and storage
+                          refresh handling, life-index modal behavior, navigation,
+                          and storage
 data/qweather_sample.json Local fallback sample payload
 requirements.txt          Python dependencies
 .env.example              Local QWeather configuration template

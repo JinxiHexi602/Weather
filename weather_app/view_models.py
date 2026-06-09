@@ -4,17 +4,17 @@ from typing import Any
 
 from .config import (
     DEFAULT_LOCATION_ID,
-    HOURLY_PREVIEW_COUNT,
-    QWEATHER_HOME_LIFE_TYPES,
-    QWEATHER_HOME_POLLUTANTS,
-    QWEATHER_LIFE_TYPES,
-    QWEATHER_POLLUTANT_LABELS,
+	HOURLY_PREVIEW_COUNT,
+	QWEATHER_HOME_LIFE_TYPES,
+	QWEATHER_HOME_POLLUTANTS,
+	QWEATHER_LIFE_ICONS,
+	QWEATHER_LIFE_TYPES,
+	QWEATHER_POLLUTANT_LABELS,
 )
 from .formatting import (
     format_chart_number,
     format_datetime,
     format_iso_time,
-    format_month_day,
     format_number,
     format_qweather_date,
     format_time,
@@ -68,21 +68,6 @@ def qweather_pollutants(air_current: dict[str, Any]) -> list[dict[str, Any]]:
 	return items
 
 
-def qweather_primary_pollutant(index: dict[str, Any]) -> str:
-	pollutant = index.get("primaryPollutant")
-	if not pollutant:
-		return "无首要污染物"
-	return pollutant.get("name") or pollutant.get("fullName") or "暂无"
-
-
-def qweather_aqi_index(item: dict[str, Any]) -> dict[str, Any]:
-	indexes = item.get("indexes", [])
-	for index in indexes:
-		if index.get("code") == "cn-mee":
-			return index
-	return indexes[0] if indexes else {}
-
-
 def build_minutely(minutely: dict[str, Any]) -> dict[str, Any]:
 	points = []
 	values = []
@@ -132,67 +117,36 @@ def build_weather_alerts(weather_alert: dict[str, Any]) -> dict[str, Any]:
 	}
 
 
-def build_air_forecast(air_hourly: dict[str, Any], air_daily: dict[str, Any]) -> dict[str, Any]:
-	hourly_items = []
-	for item in air_hourly.get("hours", [])[:8]:
-		index = qweather_aqi_index(item)
-		if not index:
-			continue
-		hourly_items.append({
-			"time": format_iso_time(item.get("forecastTime", "")),
-			"aqi": index.get("aqiDisplay", index.get("aqi", "暂无")),
-			"category": index.get("category", "暂无"),
-			"primary": qweather_primary_pollutant(index),
-		})
-
-	daily_items = []
-	for item in air_daily.get("days", [])[:3]:
-		index = qweather_aqi_index(item)
-		if not index:
-			continue
-		daily_items.append({
-			"date": format_month_day(item.get("forecastStartTime", "")),
-			"aqi": index.get("aqiDisplay", index.get("aqi", "暂无")),
-			"category": index.get("category", "暂无"),
-			"primary": qweather_primary_pollutant(index),
-		})
-
-	return {
-		"hourly": hourly_items,
-		"daily": daily_items,
-	}
-
-
-def build_astronomy(sun: dict[str, Any], moon: dict[str, Any], solar_angle: dict[str, Any]) -> dict[str, Any]:
-	moon_phases = moon.get("moonPhase", [])
-	current_phase = moon_phases[0] if moon_phases else {}
-	return {
-		"cards": [
-			{"label": "日出", "value": format_iso_time(sun.get("sunrise", "")), "icon": "i-sun"},
-			{"label": "日落", "value": format_iso_time(sun.get("sunset", "")), "icon": "i-moon"},
-			{"label": "月出", "value": format_iso_time(moon.get("moonrise", "")), "icon": "i-moon"},
-			{"label": "月落", "value": format_iso_time(moon.get("moonset", "")), "icon": "i-moon"},
-			{"label": "月相", "value": current_phase.get("name", "暂无"), "icon": "i-moon"},
-			{"label": "月亮照明", "value": qweather_percent(current_phase.get("illumination")), "icon": "i-moon"},
-			{"label": "太阳高度", "value": qweather_metric(solar_angle.get("solarElevationAngle"), "°", 1), "icon": "i-sun"},
-			{"label": "太阳方位", "value": qweather_metric(solar_angle.get("solarAzimuthAngle"), "°", 1), "icon": "i-gauge"},
-		],
-	}
-
-
 def build_qweather_life_index(indices: dict[str, Any]) -> list[dict[str, Any]]:
 	items: list[dict[str, Any]] = []
 	for entry in indices.get("daily", []):
-		if str(entry.get("type")) not in QWEATHER_HOME_LIFE_TYPES:
+		life_type = str(entry.get("type"))
+		if life_type not in QWEATHER_HOME_LIFE_TYPES:
 			continue
-		label = QWEATHER_LIFE_TYPES.get(str(entry.get("type")), entry.get("name", "生活指数"))
+		label = QWEATHER_LIFE_TYPES.get(life_type, entry.get("name", "生活指数"))
+		desc = entry.get("category", "暂无")
 		items.append({
 			"label": label,
 			"index": entry.get("level", "暂无"),
-			"desc": entry.get("category", "暂无"),
+			"desc": desc,
 			"text": entry.get("text", ""),
+			"icon": QWEATHER_LIFE_ICONS.get(life_type, "i-leaf"),
+			"tone": life_index_tone(life_type, desc),
 		})
 	return items
+
+
+def life_index_tone(life_type: str, desc: str) -> str:
+	text = str(desc)
+	if any(keyword in text for keyword in ("较不", "较强", "较差", "偏高", "炎热", "寒冷")):
+		return "warning"
+	if any(keyword in text for keyword in ("不宜", "易发", "很强", "极强", "差")):
+		return "danger"
+	if any(keyword in text for keyword in ("适宜", "舒适", "弱", "良", "较好", "较舒适")):
+		return "good"
+	if life_type == "5" and any(keyword in text for keyword in ("中等", "中")):
+		return "warning"
+	return "neutral"
 
 
 def build_qweather_hourly(hourly: dict[str, Any]) -> list[dict[str, Any]]:
@@ -347,13 +301,11 @@ def load_weather(location_id: str | None = None) -> dict[str, Any]:
 	hourly = payload["weather_hourly"]
 	daily = payload["weather_daily"]
 	life_index = build_qweather_life_index(payload["indices_1d"])
-	air_index = qweather_air_index(payload["air_current"])
-	pollutants = qweather_pollutants(payload["air_current"])
+	air_index = qweather_air_index(payload.get("air_current", {}))
+	pollutants = qweather_pollutants(payload.get("air_current", {}))
 	hourly_items = build_qweather_hourly(hourly)
 	minutely = build_minutely(payload.get("minutely", {}))
 	alerts = build_weather_alerts(payload.get("weather_alert", {}))
-	air_forecast = build_air_forecast(payload.get("air_hourly", {}), payload.get("air_daily", {}))
-	astronomy = build_astronomy(payload.get("astronomy_sun", {}), payload.get("astronomy_moon", {}), payload.get("solar_angle", {}))
 	latitude = location["lat"]
 	longitude = location["lon"]
 	updated_at = datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
@@ -399,30 +351,27 @@ def load_weather(location_id: str | None = None) -> dict[str, Any]:
 				{"label": "露点", "value": f"{format_number(now.get('dew'), 0)}°C", "icon": "i-droplet"},
 				{"label": "能见度", "value": f"{format_number(now.get('vis'), 0)} km", "icon": "i-eye"},
 				{"label": "气压", "value": f"{format_number(now.get('pressure'), 0)} hPa", "icon": "i-gauge"},
-				{"label": "空气", "value": air_index.get("category", "暂无"), "icon": "i-leaf"},
 			],
 		},
 		"current_metrics": [
+			{"label": "AQI", "value": air_index.get("aqiDisplay", air_index.get("aqi", "暂无")), "icon": "i-leaf"},
 			{"label": "体感", "value": f"{format_number(now.get('feelsLike'), 0)}°C", "icon": "i-thermometer"},
 			{"label": "湿度", "value": qweather_percent(now.get("humidity")), "icon": "i-droplet"},
 			{"label": "风", "value": qweather_wind(now), "icon": "i-wind"},
 			{"label": "降水", "value": f"{format_number(now.get('precip'))} mm", "icon": "i-rain"},
 			{"label": "能见度", "value": f"{format_number(now.get('vis'), 0)} km", "icon": "i-eye"},
-			{"label": "空气质量", "value": f"{air_index.get('category', '暂无')} · AQI {air_index.get('aqiDisplay', air_index.get('aqi', '暂无'))}", "icon": "i-leaf"},
 		],
 		"air_quality": {
 			"description": air_index.get("category", "暂无"),
-			"aqi_chn": air_index.get("aqiDisplay", air_index.get("aqi", "暂无")),
+			"aqi": air_index.get("aqiDisplay", air_index.get("aqi", "暂无")),
 			"standard": air_index.get("name", "暂无"),
 			"level": air_index.get("level", "暂无"),
 			"effect": air_index.get("health", {}).get("effect", ""),
 			"advice": air_index.get("health", {}).get("advice", {}).get("generalPopulation", ""),
 			"pollutants": pollutants,
-			"forecast": air_forecast,
 		},
 		"minutely": minutely,
 		"alerts": alerts,
-		"astronomy": astronomy,
 		"life_index": life_index,
 		"hourly": hourly_items,
 		"hourly_chart": build_hourly_chart(hourly_items),
