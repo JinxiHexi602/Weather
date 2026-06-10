@@ -16,6 +16,8 @@ def register_routes(app: Flask) -> None:
             "cache_hit": weather["cache_hit"],
             "updated_at": weather["updated_at_iso"],
             "api_enabled": weather["api_enabled"],
+            "background_time": weather["background_time"],
+            "background_time_phase": weather["background_time_phase"],
         })
 
     @app.get("/api/cities")

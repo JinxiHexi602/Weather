@@ -24,6 +24,67 @@ from .icons import qweather_background_theme, qweather_icon
 from .qweather import load_qweather_payload
 
 
+LOCAL_TIMEZONE = timezone(timedelta(hours=8))
+
+
+def parse_clock_minutes(value: Any) -> int | None:
+	text = str(value or "").strip()
+	parts = text.split(":")
+	if len(parts) < 2:
+		return None
+	try:
+		hour = int(parts[0])
+		minute = int(parts[1])
+	except ValueError:
+		return None
+	if not 0 <= hour <= 23 or not 0 <= minute <= 59:
+		return None
+	return hour * 60 + minute
+
+
+def time_phase_from_minutes(current: int, sunrise: Any, sunset: Any) -> str:
+	sunrise_minutes = parse_clock_minutes(sunrise)
+	sunset_minutes = parse_clock_minutes(sunset)
+	if sunrise_minutes is None or sunset_minutes is None:
+		return fallback_time_phase(current)
+
+	dawn_start = max(0, sunrise_minutes - 60)
+	dawn_end = min(24 * 60, sunrise_minutes + 60)
+	dusk_start = max(0, sunset_minutes - 60)
+	dusk_end = min(24 * 60, sunset_minutes + 60)
+
+	if dawn_start <= current < dawn_end:
+		return "dawn"
+	if dusk_start <= current < dusk_end:
+		return "dusk"
+	if dawn_end <= current < dusk_start:
+		return "day"
+	return "night"
+
+
+def fallback_time_phase(current: int) -> str:
+	if 330 <= current < 480:
+		return "dawn"
+	if 480 <= current < 1050:
+		return "day"
+	if 1050 <= current < 1200:
+		return "dusk"
+	return "night"
+
+
+def build_background_time(daily: dict[str, Any], now: datetime) -> dict[str, str]:
+	today = daily.get("daily", [{}])[0] if daily.get("daily") else {}
+	current_minutes = now.hour * 60 + now.minute
+	sunrise = today.get("sunrise", "")
+	sunset = today.get("sunset", "")
+	return {
+		"sunrise": sunrise,
+		"sunset": sunset,
+		"updated_at_iso": now.isoformat(timespec="seconds"),
+		"phase": time_phase_from_minutes(current_minutes, sunrise, sunset),
+	}
+
+
 def qweather_wind(item: dict[str, Any]) -> str:
 	speed = format_number(item.get("windSpeed"), 0)
 	if speed == "暂无":
@@ -308,7 +369,9 @@ def load_weather(location_id: str | None = None) -> dict[str, Any]:
 	alerts = build_weather_alerts(payload.get("weather_alert", {}))
 	latitude = location["lat"]
 	longitude = location["lon"]
-	updated_at = datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
+	current_time = datetime.now(LOCAL_TIMEZONE)
+	updated_at = current_time.isoformat(timespec="seconds")
+	background_time = build_background_time(daily, current_time)
 	forecast_keypoint = f"{daily['daily'][0]['textDay']}转{daily['daily'][0]['textNight']}，最高 {daily['daily'][0]['tempMax']}°C，最低 {daily['daily'][0]['tempMin']}°C。"
 
 	return {
@@ -325,6 +388,8 @@ def load_weather(location_id: str | None = None) -> dict[str, Any]:
 		"api_enabled": bool(payload.get("api_enabled")),
 		"cache_hit": cache_hit,
 		"background_theme": qweather_background_theme(now.get("icon"), now.get("text", "")),
+		"background_time_phase": background_time["phase"],
+		"background_time": background_time,
 		"forecast_keypoint": forecast_keypoint,
 		"hourly_description": "未来 24 小时以降雨和阴天为主，夜间雨势更明显。",
 		"now": {

@@ -1,5 +1,6 @@
 import {elements} from "./dom.js";
 import {fetchWeatherRefresh} from "./api.js";
+import {updateBackgroundPhase} from "./background.js";
 
 let lastUpdatedAt = parseUpdatedAt(elements.updateTime?.dataset.updatedAt);
 let refreshTimer = null;
@@ -117,6 +118,7 @@ function refreshWeatherTime() {
 		elements.updateTime.dataset.updatedAt = lastUpdatedAt.toISOString();
 	}
 	renderUpdateTime();
+	updateBackgroundPhase(lastUpdatedAt);
 	playRefreshAnimation();
 }
 
@@ -135,7 +137,15 @@ export async function refreshWeather() {
 		if (elements.updateTime) {
 			elements.updateTime.dataset.updatedAt = lastUpdatedAt.toISOString();
 		}
+		if (payload.background_time) {
+			document.body.dataset.sunrise = payload.background_time.sunrise || "";
+			document.body.dataset.sunset = payload.background_time.sunset || "";
+		}
+		if (payload.background_time_phase) {
+			document.body.dataset.timePhase = payload.background_time_phase;
+		}
 		renderUpdateTime();
+		updateBackgroundPhase(lastUpdatedAt);
 
 		if (!payload.cache_hit && payload.api_enabled) {
 			window.location.reload();
